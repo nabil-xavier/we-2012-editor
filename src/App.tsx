@@ -44,30 +44,23 @@ export default function App() {
     }, 4000);
   };
 
-  // 1. Setup and State Management: Initialize sql.js WebAssembly
+  // 1. Setup and State Management: Initialize sql.js WebAssembly 
   useEffect(() => {
     async function loadSqlJs() {
       try {
         setIsLoadingWasm(true);
+
+        const wasmPath = "/public/sql-wasm.wasm";
         const sqlInstance = await initSqlJs({
-          locateFile: (file: string) => `/${file}`,
+          locateFile: () => wasmPath,
         });
+
         setSQL(sqlInstance);
         setIsLoadingWasm(false);
       } catch (err) {
         console.error("Failed to load sql.js WebAssembly:", err);
-        // Fallback to unpkg CDN if local wasm fails
-        try {
-          const sqlInstance = await initSqlJs({
-            locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
-          });
-          setSQL(sqlInstance);
-          setIsLoadingWasm(false);
-        } catch (fallbackErr) {
-          console.error("Fallback load failed:", fallbackErr);
-          notify("Failed to load SQLite WebAssembly engine.", "error");
-          setIsLoadingWasm(false);
-        }
+        notify("Failed to load SQLite WebAssembly engine.", "error");
+        setIsLoadingWasm(false); 
       }
     }
     loadSqlJs();
