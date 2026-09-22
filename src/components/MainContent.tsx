@@ -1,6 +1,25 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "#lib/utils";
-import { LayoutGrid } from "lucide-react";
+import { DataTable, type DataTableColumn } from "./DataTable";
+import { ItemDetail } from "./ItemDetail";
+
+// ---------------------------------------------------------------------------
+// Placeholder data — replace with real data sources per nav item later
+// ---------------------------------------------------------------------------
+const COLUMNS: DataTableColumn[] = [
+  { key: "id", title: "ID" },
+  { key: "name", title: "Name" },
+  { key: "status", title: "Status" },
+];
+
+const DUMMY_DATA: Record<string, unknown>[] = [
+  { id: 1, name: "FC Barcelona", status: "Active" },
+  { id: 2, name: "Real Madrid", status: "Active" },
+  { id: 3, name: "Atletico Madrid", status: "Inactive" },
+  { id: 4, name: "Sevilla FC", status: "Active" },
+  { id: 5, name: "Valencia CF", status: "Inactive" },
+];
+// ---------------------------------------------------------------------------
 
 export interface MainContentProps {
   title?: string;
@@ -17,6 +36,9 @@ export function MainContent({
   children,
   className,
 }: MainContentProps) {
+  // null = list view; non-null = detail view for the selected row
+  const [selectedItem, setSelectedItem] = useState<Record<string, unknown> | null>(null);
+
   return (
     <main
       className={cn(
@@ -25,7 +47,7 @@ export function MainContent({
       )}
     >
       {/* Desktop Page Frame Header */}
-      <div className="hidden lg:flex items-center justify-between px-8 py-5 border-b border-border bg-card/20">
+      <div className="hidden md:flex items-center justify-between px-8 py-5 border-b border-border bg-card/20">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">
             {title}
@@ -46,20 +68,21 @@ export function MainContent({
       {/* Main Details Body */}
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
         {children ? (
+          // If parent passes explicit children, render those instead
           children
+        ) : selectedItem ? (
+          // Detail view — shown after clicking a row
+          <ItemDetail
+            title={String(selectedItem["name"] ?? "Item Details")}
+            onBack={() => setSelectedItem(null)}
+          />
         ) : (
-          /* Placeholder Details Frame */
-          <div className="h-full min-h-[360px] flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/30 p-8 text-center">
-            <div className="flex size-12 items-center justify-center rounded-lg bg-muted text-muted-foreground mb-3">
-              <LayoutGrid className="size-6" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">
-              {title} Frame
-            </h3>
-            <p className="text-xs text-muted-foreground max-w-sm mt-1">
-              This is the main details area. Specific editor forms, tables, and content will be implemented here.
-            </p>
-          </div>
+          // List view — the data table
+          <DataTable
+            columns={COLUMNS}
+            data={DUMMY_DATA}
+            onRowClick={(row) => setSelectedItem(row)}
+          />
         )}
       </div>
     </main>

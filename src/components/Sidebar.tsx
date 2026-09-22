@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { Button } from "./ui/button";
 import {
   Trophy,
@@ -10,6 +11,21 @@ import {
   Save,
   type LucideIcon,
 } from "lucide-react";
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
+} from "./ui/sidebar";
 import { cn } from "#lib/utils";
 
 export interface NavItem {
@@ -40,74 +56,88 @@ export function Sidebar({
   activeItemId = "teams",
   onSelectItem,
   className,
-}: SidebarProps) {
+  ...props
+}: SidebarProps & React.ComponentProps<typeof ShadcnSidebar>) {
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleSelectItem = (id: string) => {
+    onSelectItem?.(id);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
-    <aside
-      className={cn(
-        "hidden lg:flex flex-col w-64 xl:w-72 h-dvh shrink-0 border-r border-border bg-card/60 backdrop-blur select-none",
-        className
-      )}
+    <ShadcnSidebar
+      className={cn("select-none", className)}
+      collapsible="offcanvas"
+      {...props}
     >
       {/* App Branding Header */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-border">
-        <div className="flex items-center justify-center size-9 rounded-md bg-primary text-primary-foreground shadow-sm">
-          <Trophy className="size-5" />
+      <SidebarHeader className="h-16 justify-center border-b border-sidebar-border px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col min-w-0">
+            <span className="font-semibold text-sm tracking-tight text-sidebar-foreground truncate">
+              WE 2012 Editor
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col min-w-0">
-          <span className="font-semibold text-sm tracking-tight text-foreground truncate">
-            Football Editor
-          </span>
-          <span className="text-[11px] text-muted-foreground truncate">
-            WE 2012 Engine
-          </span>
-        </div>
-      </div>
+      </SidebarHeader>
 
       {/* Navigation Menu List */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        <div className="px-2 pb-2 text-[11px] font-medium tracking-wider uppercase text-muted-foreground">
-          Editor Menu
-        </div>
-        {items.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeItemId === item.id;
+      <SidebarContent className="px-2 py-3">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[11px] font-medium tracking-wider uppercase text-muted-foreground">
+            Editor Menu
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeItemId === item.id;
 
-          return (
-            <Button
-              key={item.id}
-              variant={isActive ? "secondary" : "ghost"}
-              onClick={() => onSelectItem?.(item.id)}
-              className={cn(
-                "w-full justify-start h-9 px-2.5 text-xs font-medium rounded-md gap-2.5",
-                isActive
-                  ? "bg-secondary text-secondary-foreground font-semibold shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className={cn("size-4", isActive ? "text-primary" : "text-muted-foreground")} />
-              <span className="truncate flex-1 text-left">{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">
-                  {item.badge}
-                </span>
-              )}
-            </Button>
-          );
-        })}
-      </div>
+                return (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => handleSelectItem(item.id)}
+                      tooltip={item.label}
+                      className={cn(
+                        "rounded-md gap-2.5 px-2.5 h-9 text-xs",
+                        isActive && "font-semibold shadow-xs"
+                      )}
+                    >
+                      <Icon className={cn("size-4", isActive ? "text-primary" : "text-muted-foreground")} />
+                      <span className="truncate flex-1 text-left">{item.label}</span>
+                    </SidebarMenuButton>
+                    {item.badge && (
+                      <SidebarMenuBadge className="rounded-full bg-muted text-muted-foreground font-mono text-[10px] px-1.5 py-0.5">
+                        {item.badge}
+                      </SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
       {/* Quick Action Footer */}
-      <div className="p-3 border-t border-border space-y-1">
-        <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
-          <FolderOpen className="size-3.5" />
-          <span>Open .bin File</span>
-        </Button>
-        <Button variant="default" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
-          <Save className="size-3.5" />
-          <span>Save Changes</span>
-        </Button>
-      </div>
-    </aside>
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
+        <div className="space-y-1">
+          <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
+            <FolderOpen className="size-3.5" />
+            <span>Open .bin File</span>
+          </Button>
+          <Button variant="default" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
+            <Save className="size-3.5" />
+            <span>Save Changes</span>
+          </Button>
+        </div>
+      </SidebarFooter>
+      <SidebarRail />
+    </ShadcnSidebar>
   );
 }
 
