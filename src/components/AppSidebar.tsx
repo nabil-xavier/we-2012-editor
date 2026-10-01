@@ -1,18 +1,8 @@
 import type * as React from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
+import { FolderOpen, ArrowDownToLine } from "lucide-react";
 import {
-  Trophy,
-  Users,
-  Shield,
-  Sliders,
-  Database,
-  Settings,
-  FolderOpen,
-  Save,
-  type LucideIcon,
-} from "lucide-react";
-import {
-  Sidebar as ShadcnSidebar,
+  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -25,39 +15,24 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from "./ui/sidebar";
-import { cn } from "#lib/utils";
+} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import type { NavItem } from "@/types/nav";
 
-export interface NavItem {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  badge?: string;
-}
-
-export interface SidebarProps {
+export interface AppSidebarProps {
   items?: NavItem[];
   activeItemId?: string;
   onSelectItem?: (id: string) => void;
   className?: string;
 }
 
-export const DEFAULT_NAV_ITEMS: NavItem[] = [
-  { id: "teams", label: "Teams & Clubs", icon: Shield, badge: "24" },
-  { id: "players", label: "Player Database", icon: Users, badge: "500+" },
-  { id: "competitions", label: "Competitions", icon: Trophy },
-  { id: "tactics", label: "Tactics & Formations", icon: Sliders },
-  { id: "database", label: "Raw Database (.bin)", icon: Database },
-  { id: "settings", label: "Editor Settings", icon: Settings },
-];
-
-export function Sidebar({
-  items = DEFAULT_NAV_ITEMS,
+export function AppSidebar({
+  items = [],
   activeItemId = "teams",
   onSelectItem,
   className,
   ...props
-}: SidebarProps & React.ComponentProps<typeof ShadcnSidebar>) {
+}: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile, isMobile } = useSidebar();
 
   const handleSelectItem = (id: string) => {
@@ -68,7 +43,7 @@ export function Sidebar({
   };
 
   return (
-    <ShadcnSidebar
+    <Sidebar
       className={cn("select-none", className)}
       collapsible="offcanvas"
       {...props}
@@ -104,11 +79,18 @@ export function Sidebar({
                       tooltip={item.label}
                       className={cn(
                         "rounded-md gap-2.5 px-2.5 h-9 text-xs",
-                        isActive && "font-semibold shadow-xs"
+                        isActive && "font-semibold shadow-xs",
                       )}
                     >
-                      <Icon className={cn("size-4", isActive ? "text-primary" : "text-muted-foreground")} />
-                      <span className="truncate flex-1 text-left">{item.label}</span>
+                      <Icon
+                        className={cn(
+                          "size-4",
+                          isActive ? "text-primary" : "text-muted-foreground",
+                        )}
+                      />
+                      <span className="truncate flex-1 text-left">
+                        {item.label}
+                      </span>
                     </SidebarMenuButton>
                     {item.badge && (
                       <SidebarMenuBadge className="rounded-full bg-muted text-muted-foreground font-mono text-[10px] px-1.5 py-0.5">
@@ -126,19 +108,24 @@ export function Sidebar({
       {/* Quick Action Footer */}
       <SidebarFooter className="p-3 border-t border-sidebar-border">
         <div className="space-y-1">
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
-            <FolderOpen className="size-3.5" />
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 h-8 text-xs"
+          >
+            <FolderOpen className="size-4" />
             <span>Open .bin File</span>
           </Button>
-          <Button variant="default" size="sm" className="w-full justify-start gap-2 h-8 text-xs">
-            <Save className="size-3.5" />
-            <span>Save Changes</span>
+          <Button
+            className="w-full justify-start gap-2 h-8 text-xs"
+          >
+            <ArrowDownToLine className="size-4" />
+            <span>Download .bin File</span>
           </Button>
         </div>
       </SidebarFooter>
       <SidebarRail />
-    </ShadcnSidebar>
+    </Sidebar>
   );
 }
 
-export default Sidebar;
+export default AppSidebar;

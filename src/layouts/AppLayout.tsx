@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
-import { Sidebar, DEFAULT_NAV_ITEMS, type NavItem } from "#components/Sidebar";
-import { MobileHeader } from "#components/MobileHeader";
-import { MainContent } from "#components/MainContent";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "#components/ui/sidebar";
-import { cn } from "#lib/utils";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Header } from "@/components/Header";
+import { MainContent } from "@/components/MainContent";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import type { NavItem } from "@/types/nav";
+import { DEFAULT_NAV_ITEMS } from "@/data/nav-items";
 
 export interface AppLayoutProps {
   navItems?: NavItem[];
@@ -30,7 +32,7 @@ export function AppLayout({
   return (
     <SidebarProvider className={cn("min-h-dvh bg-background text-foreground", className)}>
       {/* Sidebar navigation using ui/sidebar primitives */}
-      <Sidebar
+      <AppSidebar
         items={navItems}
         activeItemId={activeItemId}
         onSelectItem={handleSelectItem}
@@ -38,19 +40,14 @@ export function AppLayout({
 
       {/* Main layout container with inset */}
       <SidebarInset className="flex flex-col min-w-0 h-dvh overflow-hidden">
-        {/* Mobile Header */}
-        <MobileHeader
+        {/* Page Header (Mobile & Desktop) */}
+        <Header
           title={activeItem?.label}
+          description={`Editor frame for ${activeItem?.label.toLowerCase()}`}
         />
 
         {/* Details Page / Main View */}
-        <MainContent
-          title={activeItem?.label}
-          description={`Editor frame for ${activeItem?.label.toLowerCase()}`}
-          headerActions={
-            <SidebarTrigger className="hidden md:flex" />
-          }
-        >
+        <MainContent>
           {children ? children(activeItem) : undefined}
         </MainContent>
       </SidebarInset>

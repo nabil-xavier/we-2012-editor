@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 
 export interface ItemDetailProps {
@@ -26,7 +26,7 @@ export function ItemDetail({ onBack, title = "Item Details" }: ItemDetailProps) 
       </div>
 
       {/* Blank content area — placeholder for future detail content */}
-      <div className="min-h-[360px] rounded-xl border border-dashed border-border bg-card/30" />
+      <div className="min-h-90 rounded-xl border border-dashed border-border bg-card/30" />
     </div>
   );
 }

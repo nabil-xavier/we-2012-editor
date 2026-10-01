@@ -5,8 +5,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "./ui/table";
-import { cn } from "#lib/utils";
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 export interface DataTableColumn {
   /** The key in each data row object to read from */
@@ -32,13 +32,13 @@ export function DataTable({
   className,
 }: DataTableProps) {
   return (
-    <div className={cn("rounded-lg border border-border overflow-hidden", className)}>
+    <div className={cn("rounded-sm border border-border overflow-hidden", className)}>
       <Table>
         {/* Table Header — renders one <th> per column using the column's `title` */}
         <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
+          <TableRow >
             {columns.map((col) => (
-              <TableHead key={col.key} className="font-semibold text-foreground">
+              <TableHead key={col.key}>
                 {col.title}
               </TableHead>
             ))}

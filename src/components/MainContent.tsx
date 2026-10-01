@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
-import { cn } from "#lib/utils";
-import { DataTable, type DataTableColumn } from "./DataTable";
-import { ItemDetail } from "./ItemDetail";
+import { cn } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { ItemDetail } from "@/components/ItemDetail";
 
 // ---------------------------------------------------------------------------
 // Placeholder data — replace with real data sources per nav item later
@@ -22,17 +22,11 @@ const DUMMY_DATA: Record<string, unknown>[] = [
 // ---------------------------------------------------------------------------
 
 export interface MainContentProps {
-  title?: string;
-  description?: string;
-  headerActions?: ReactNode;
   children?: ReactNode;
   className?: string;
 }
 
 export function MainContent({
-  title = "Details Page",
-  description = "Content will be rendered here in subsequent editor modules.",
-  headerActions,
   children,
   className,
 }: MainContentProps) {
@@ -46,25 +40,6 @@ export function MainContent({
         className
       )}
     >
-      {/* Desktop Page Frame Header */}
-      <div className="hidden md:flex items-center justify-between px-8 py-5 border-b border-border bg-card/20">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">
-            {title}
-          </h2>
-          {description && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {description}
-            </p>
-          )}
-        </div>
-        {headerActions && (
-          <div className="flex items-center gap-2">
-            {headerActions}
-          </div>
-        )}
-      </div>
-
       {/* Main Details Body */}
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
         {children ? (
