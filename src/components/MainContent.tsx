@@ -2,9 +2,13 @@ import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { PlayerDetail } from "@/components/PlayerDetail";
+import { FormationDetail } from "@/components/FormationDetail";
 import { TeamDetail } from "@/components/TeamDetail";
 import type { PlayerData } from "@/types/player";
 import type { FullTeamRecord } from "@/types/team";
+import type { FormationDetail as FormationDetailType, FormationData } from "@/types/formation";
+import { BallDetail } from "@/components/BallDetail";
+import type { BallData } from "@/types/ball";
 
 // ---------------------------------------------------------------------------
 // Column definitions matching PlayerData attributes
@@ -26,6 +30,17 @@ const TEAM_COLUMNS: DataTableColumn[] = [
   { key: "name", title: "Team Name" },
   { key: "type_label", title: "Category" },
   { key: "mean", title: "Hexagon Mean" },
+];
+
+const FORMATION_COLUMNS: DataTableColumn[] = [
+  { key: "identifier", title: "ID" },
+  { key: "name", title: "Name" },
+];
+
+const BALL_COLUMNS: DataTableColumn[] = [
+  { key: "identifier", title: "ID" },
+  { key: "name", title: "Name" },
+  { key: "type", title: "Type" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -328,6 +343,61 @@ const DUMMY_TEAMS: (FullTeamRecord & Record<string, unknown>)[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Dummy formation data for demonstration
+// ---------------------------------------------------------------------------
+const DUMMY_FORMATIONS: (FormationData & Record<string, unknown>)[] = [
+  { identifier: 1, name: "4-4-2", data: null },
+  { identifier: 2, name: "4-3-3", data: null },
+  { identifier: 3, name: "3-5-2", data: null },
+  { identifier: 4, name: "5-3-2", data: null },
+  { identifier: 5, name: "4-2-3-1", data: null },
+];
+
+const DUMMY_FORMATION_DETAIL: Record<number, FormationDetailType> = {
+  1: {
+    formation: { identifier: 1, name: "4-4-2", data: null },
+    positions: [
+      { identifier: 1, formation: 1, position: 2, x: 0, y: 0, x_display: 0, y_display: 0 },
+      { identifier: 2, formation: 1, position: 3, x: 40, y: 20, x_display: 40, y_display: 20 },
+      { identifier: 3, formation: 1, position: 4, x: 80, y: 20, x_display: 80, y_display: 20 },
+      { identifier: 4, formation: 1, position: 5, x: 120, y: 20, x_display: 120, y_display: 20 },
+      { identifier: 5, formation: 1, position: 6, x: 0, y: 100, x_display: 0, y_display: 100 },
+      { identifier: 6, formation: 1, position: 7, x: 40, y: 100, x_display: 40, y_display: 100 },
+      { identifier: 7, formation: 1, position: 8, x: 80, y: 100, x_display: 80, y_display: 100 },
+      { identifier: 8, formation: 1, position: 9, x: 120, y: 100, x_display: 120, y_display: 100 },
+      { identifier: 9, formation: 1, position: 10, x: 30, y: 200, x_display: 30, y_display: 200 },
+      { identifier: 10, formation: 1, position: 11, x: 90, y: 200, x_display: 90, y_display: 200 },
+    ]
+  },
+  2: {
+    formation: { identifier: 2, name: "4-3-3", data: null },
+    positions: [
+      { identifier: 11, formation: 2, position: 2, x: 0, y: 0, x_display: 0, y_display: 0 },
+      { identifier: 12, formation: 2, position: 3, x: 40, y: 20, x_display: 40, y_display: 20 },
+      { identifier: 13, formation: 2, position: 4, x: 80, y: 20, x_display: 80, y_display: 20 },
+      { identifier: 14, formation: 2, position: 5, x: 120, y: 20, x_display: 120, y_display: 20 },
+      { identifier: 15, formation: 2, position: 6, x: 20, y: 110, x_display: 20, y_display: 110 },
+      { identifier: 16, formation: 2, position: 7, x: 60, y: 110, x_display: 60, y_display: 110 },
+      { identifier: 17, formation: 2, position: 8, x: 100, y: 110, x_display: 100, y_display: 110 },
+      { identifier: 18, formation: 2, position: 9, x: 10, y: 200, x_display: 10, y_display: 200 },
+      { identifier: 19, formation: 2, position: 10, x: 60, y: 200, x_display: 60, y_display: 200 },
+      { identifier: 20, formation: 2, position: 11, x: 110, y: 200, x_display: 110, y_display: 200 },
+    ]
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Dummy ball data for demonstration
+// ---------------------------------------------------------------------------
+const DUMMY_BALLS: (BallData & Record<string, unknown>)[] = [
+  { identifier: 1, name: "Classic Ball", type: 0, icon: null, texture: null },
+  { identifier: 2, name: "Speed Ball", type: 1, icon: null, texture: null },
+  { identifier: 3, name: "Power Ball", type: 2, icon: null, texture: null },
+  { identifier: 4, name: "Gold Ball", type: 3, icon: null, texture: null },
+  { identifier: 5, name: "Championship Ball", type: 4, icon: null, texture: null },
+];
+
 export interface MainContentProps {
   children?: ReactNode;
   activeNavId?: string;
@@ -341,9 +411,12 @@ export function MainContent({
 }: MainContentProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerData | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<FullTeamRecord | null>(null);
+  const [selectedFormation, setSelectedFormation] = useState<FormationDetailType | null>(null);
+  const [selectedBall, setSelectedBall] = useState<BallData | null>(null);
 
-  // If viewing teams category
   const isTeams = activeNavId === "teams";
+  const isFormations = activeNavId === "formations";
+  const isBalls = activeNavId === "balls";
 
   return (
     <main
@@ -369,11 +442,42 @@ export function MainContent({
             onBack={() => setSelectedPlayer(null)}
             onSave={(updated) => setSelectedPlayer(updated)}
           />
+        ) : selectedFormation ? (
+          <FormationDetail
+            formationDetail={selectedFormation}
+            onBack={() => setSelectedFormation(null)}
+          />
+        ) : selectedBall ? (
+          <BallDetail
+            ball={selectedBall}
+            onBack={() => setSelectedBall(null)}
+            onSave={(updated) => setSelectedBall(updated)}
+          />
         ) : isTeams ? (
           <DataTable
             columns={TEAM_COLUMNS}
             data={DUMMY_TEAMS}
             onRowClick={(row) => setSelectedTeam(row as unknown as FullTeamRecord)}
+          />
+        ) : isFormations ? (
+          <DataTable
+            columns={FORMATION_COLUMNS}
+            data={DUMMY_FORMATIONS}
+            onRowClick={(row) => {
+              const f = row as unknown as FormationData;
+              setSelectedFormation(
+                DUMMY_FORMATION_DETAIL[f.identifier] ?? {
+                  formation: f,
+                  positions: [],
+                }
+              );
+            }}
+          />
+        ) : isBalls ? (
+          <DataTable
+            columns={BALL_COLUMNS}
+            data={DUMMY_BALLS}
+            onRowClick={(row) => setSelectedBall(row as unknown as BallData)}
           />
         ) : (
           <DataTable
