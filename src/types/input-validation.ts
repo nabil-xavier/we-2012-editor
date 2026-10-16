@@ -19,6 +19,8 @@ export interface StringValidationRules {
   minLength?: number;
   /** Maximum character length */
   maxLength?: number;
+  /** Exact character length (e.g. exactly 3 characters) */
+  exactLength?: number;
   /** Regular expression pattern */
   pattern?: RegExp;
   /** Error message displayed when pattern does not match */

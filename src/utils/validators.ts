@@ -24,6 +24,10 @@ export function validateString(
     return null;
   }
 
+  if (rules?.exactLength !== undefined && value.length !== rules.exactLength) {
+    return `Must be exactly ${rules.exactLength} characters.`;
+  }
+
   if (rules?.minLength !== undefined && value.length < rules.minLength) {
     return `Must be at least ${rules.minLength} characters.`;
   }

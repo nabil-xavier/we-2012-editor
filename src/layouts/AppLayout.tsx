@@ -47,7 +47,7 @@ export function AppLayout({
         />
 
         {/* Details Page / Main View */}
-        <MainContent>
+        <MainContent activeNavId={activeItemId}>
           {children ? children(activeItem) : undefined}
         </MainContent>
       </SidebarInset>
