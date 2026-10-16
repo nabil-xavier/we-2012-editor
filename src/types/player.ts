@@ -6,6 +6,7 @@ export interface PlayerData {
   identifier?: number;
   name?: string;
   name_shorter?: string;
+  club?: string;
   age?: number;
   height?: number;
   price?: number;

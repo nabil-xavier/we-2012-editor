@@ -19,7 +19,17 @@ import {
   Hand,
   RotateCcw,
   Brain,
+  Search,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { CLUBS } from "@/data/clubs";
 
 export interface PlayerDetailProps {
   /** Optional initial player data to edit */
@@ -38,6 +48,7 @@ const DEFAULT_PLAYER_DATA: PlayerData = {
   identifier: 1001,
   name: "Lionel Messi",
   name_shorter: "L. MESSI",
+  club: "FC Barcelona",
   age: 24,
   height: 169,
   price: 50000000,
@@ -230,6 +241,50 @@ export function PlayerDetail({
                 helperText="Short commentary / shirt name"
                 onValueChange={(val) => updateField("name_shorter", val)}
               />
+              <div className="flex flex-col gap-1.5 w-full">
+                <label
+                  htmlFor="player-club"
+                  className="text-xs font-medium text-foreground select-none"
+                >
+                  Club
+                </label>
+                <Select
+                  value={formData.club || undefined}
+                  onValueChange={(val) => updateField("club", val ?? undefined)}
+                >
+                  <SelectTrigger id="player-club" className="w-full">
+                    <SelectValue placeholder="Select club..." />
+                  </SelectTrigger>
+                  <SelectContent
+                    align="start"
+                    alignItemWithTrigger={false}
+                    className="w-[--anchor-width] min-w-56 max-h-72 p-0"
+                  >
+                    <div className="p-2 border-b border-border sticky top-0 bg-popover z-10">
+                      <div className="relative flex items-center">
+                        <Search className="absolute left-2.5 size-3.5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="text"
+                          placeholder="Search club..."
+                          className="pl-8 h-7 text-xs"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="p-1">
+                      {CLUBS.map((club) => (
+                        <SelectItem key={club.id} value={club.name}>
+                          {club.name}
+                        </SelectItem>
+                      ))}
+                    </div>
+                  </SelectContent>
+                </Select>
+                <span className="text-[10px] text-muted-foreground select-none">
+                  Club or team affiliation
+                </span>
+              </div>
               <ValidatedInput
                 type="custom-integer"
                 label="Age"
