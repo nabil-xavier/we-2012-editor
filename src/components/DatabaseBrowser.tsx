@@ -1,6 +1,5 @@
 // src/components/DatabaseBrowser.tsx
-import { useMemo } from "react";
-import { RecordDetailPanel } from "@/components/RecordDetailPanel";
+import { useCallback } from "react";
 import { TableSearchInput } from "@/components/TableSearchInput";
 import { VirtualizedTable } from "@/components/VirtualizedTable";
 import { useTableBrowser } from "@/hooks/useTableBrowser";
@@ -10,17 +9,27 @@ import type { BrowserTableConfig } from "@/types/table-browser";
 export interface DatabaseBrowserProps {
   /** Table description: physical table, columns, search family, labels */
   config: BrowserTableConfig;
+  /**
+   * Called with the identifier of the clicked (or activated) row, just after
+   * that row is selected. Opening the full detail page is the caller's job.
+   */
+  onOpenRecord?: (identifier: number) => void;
   className?: string;
 }
 
 /**
- * Search + virtualized table + details panel for one database table.
+ * Search + virtualized table for one database table.
  *
  * Search text, scroll position and selection live in the view store, so an
  * edit routed through the database store re-renders the rows without losing
- * the query, the scroll offset or the selected record.
+ * the query, the scroll offset or the selected record. Clicking a row selects
+ * it and reports it through `onOpenRecord`, which routes to the detail page.
  */
-export function DatabaseBrowser({ config, className }: DatabaseBrowserProps) {
+export function DatabaseBrowser({
+  config,
+  onOpenRecord,
+  className,
+}: DatabaseBrowserProps) {
   const {
     rows,
     query,
@@ -30,25 +39,17 @@ export function DatabaseBrowser({ config, className }: DatabaseBrowserProps) {
     hasTable,
     totalCount,
     selectedIdentifier,
-    selectedRecord,
     selectRecord,
     getCellValue,
   } = useTableBrowser(config);
 
-  /** Values joined from other tables (group/competition names) shown first */
-  const joinedFields = useMemo(() => {
-    const labelColumnKey = config.labelSource?.labelColumn;
-    if (!selectedRecord || !labelColumnKey) {
-      return [];
-    }
-    return config.columns
-      .filter((column) => column.key === labelColumnKey)
-      .map((column) => ({
-        key: column.key,
-        title: column.title,
-        value: getCellValue(selectedRecord, column),
-      }));
-  }, [config, selectedRecord, getCellValue]);
+  const handleSelect = useCallback(
+    (identifier: number) => {
+      selectRecord(identifier);
+      onOpenRecord?.(identifier);
+    },
+    [selectRecord, onOpenRecord]
+  );
 
   const term = appliedQuery.trim();
   const emptyMessage =
@@ -81,35 +82,16 @@ export function DatabaseBrowser({ config, className }: DatabaseBrowserProps) {
         className="w-full max-w-md shrink-0"
       />
 
-      {/* Table + details: side by side on desktop, stacked on mobile */}
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <VirtualizedTable
-          columns={config.columns}
-          records={rows}
-          getCellValue={getCellValue}
-          selectedIdentifier={selectedIdentifier}
-          onSelect={selectRecord}
-          resetKey={appliedQuery}
-          emptyMessage={emptyMessage}
-          className="max-lg:h-[60dvh]"
-        />
-
-        {selectedIdentifier === null ? (
-          <aside className="flex min-h-0 items-center justify-center border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-            Select a {config.label.toLowerCase()} to inspect it.
-          </aside>
-        ) : (
-          <RecordDetailPanel
-            tableName={config.tableName}
-            label={config.label}
-            identifier={selectedIdentifier}
-            row={selectedRecord?.row ?? null}
-            extraFields={joinedFields}
-            onClose={() => selectRecord(null)}
-            className="max-lg:max-h-[70dvh]"
-          />
-        )}
-      </div>
+      <VirtualizedTable
+        columns={config.columns}
+        records={rows}
+        getCellValue={getCellValue}
+        selectedIdentifier={selectedIdentifier}
+        onSelect={handleSelect}
+        resetKey={appliedQuery}
+        emptyMessage={emptyMessage}
+        className="min-h-0 flex-1 max-lg:h-[60dvh]"
+      />
     </div>
   );
 }

@@ -9,6 +9,15 @@ export type BrowserSearchEntity =
   | "group"
   | "formation";
 
+/** Table whose rows are opened in a full detail page */
+export type BrowserDetailKind =
+  | "player"
+  | "team"
+  | "competition"
+  | "group"
+  | "formation"
+  | "ball";
+
 /** One column rendered by the virtualized table */
 export interface BrowserColumn {
   /** Column name inside the database row */
@@ -53,6 +62,8 @@ export interface BrowserTableConfig {
   searchPlaceholder: string;
   /** Fuzzy-search family, `null` when the table has no Fuse index */
   searchEntity: BrowserSearchEntity | null;
+  /** Full detail page opened on row click, `null` when the table has none */
+  detailKind: BrowserDetailKind | null;
   /**
    * Columns matched by the substring pass, in the spirit of the field lists in
    * `src/services/search/*-search.ts`. The first pass of the browser is a plain

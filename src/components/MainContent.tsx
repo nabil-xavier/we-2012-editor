@@ -1,20 +1,24 @@
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { DatabaseBrowser } from "@/components/DatabaseBrowser";
+import { DatabaseRecordDetail } from "@/components/DatabaseRecordDetail";
+import { DetailLoading } from "@/components/DetailLoading";
+import {
+  LazyBallDetail,
+  LazyCompetitionDetail,
+  LazyFormationDetail,
+  LazyGroupDetail,
+  LazyPlayerDetail,
+  LazyTeamDetail,
+} from "@/components/LazyDetailPages";
 import { getBrowserTableConfig } from "@/data/table-browsers";
 import { useDatabaseStore } from "@/store/useDatabaseStore";
-import { PlayerDetail } from "@/components/PlayerDetail";
-import { FormationDetail } from "@/components/FormationDetail";
-import { TeamDetail } from "@/components/TeamDetail";
 import type { PlayerData } from "@/types/player";
 import type { FullTeamRecord } from "@/types/team";
 import type { FormationDetail as FormationDetailType, FormationData } from "@/types/formation";
-import { BallDetail } from "@/components/BallDetail";
 import type { BallData } from "@/types/ball";
-import { GroupDetail } from "@/components/GroupDetail";
 import type { GroupDetail as GroupDetailType, GroupData } from "@/types/group";
-import { CompetitionDetail } from "@/components/CompetitionDetail";
 import type { CompetitionDetail as CompetitionDetailType, CompetitionData } from "@/types/competition";
 import {
   DUMMY_COMPETITIONS,
@@ -463,6 +467,11 @@ export function MainContent({
   const [selectedBall, setSelectedBall] = useState<BallData | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<GroupDetailType | null>(null);
   const [selectedCompetition, setSelectedCompetition] = useState<CompetitionDetailType | null>(null);
+  /** Record opened in its full detail page, `null` while its table is browsed */
+  const [openRecord, setOpenRecord] = useState<{
+    tableName: string;
+    identifier: number;
+  } | null>(null);
 
   const isTeams = activeNavId === "teams";
   const isFormations = activeNavId === "formations";
@@ -472,7 +481,8 @@ export function MainContent({
 
   // Real data wins over the demo records: as soon as the imported database has
   // the table behind the active nav item, the virtualized browser replaces the
-  // demo table (and the demo detail panels).
+  // demo table (and the demo detail pages). Opening a row of that browser
+  // swaps the table for the full detail page of the clicked record.
   const browserConfig = getBrowserTableConfig(activeNavId);
   const browserHasTable = useDatabaseStore((state) =>
     browserConfig ? state.database[browserConfig.tableName] !== undefined : false
@@ -487,112 +497,133 @@ export function MainContent({
     >
       {/* Main Details Body */}
       <div className="flex flex-1 min-h-0 flex-col p-4 sm:p-6 lg:p-8">
-        {children ? (
-          children
-        ) : browserConfig && browserHasTable ? (
-          <DatabaseBrowser config={browserConfig} />
-        ) : selectedTeam ? (
-          <TeamDetail
-            initialData={selectedTeam}
-            title={selectedTeam.names?.[0]?.value ?? selectedTeam.team.name_short}
-            onBack={() => setSelectedTeam(null)}
-            onChange={(updated) => setSelectedTeam(updated)}
-          />
-        ) : selectedPlayer ? (
-          <PlayerDetail
-            player={selectedPlayer}
-            onBack={() => setSelectedPlayer(null)}
-            onSave={(updated) => setSelectedPlayer(updated)}
-          />
-        ) : selectedFormation ? (
-          <FormationDetail
-            formationDetail={selectedFormation}
-            onBack={() => setSelectedFormation(null)}
-          />
-        ) : selectedBall ? (
-          <BallDetail
-            ball={selectedBall}
-            onBack={() => setSelectedBall(null)}
-            onSave={(updated) => setSelectedBall(updated)}
-          />
-        ) : selectedCompetition ? (
-          <CompetitionDetail
-            competitionDetail={selectedCompetition}
-            onBack={() => setSelectedCompetition(null)}
-            onSave={(updated) => setSelectedCompetition(updated)}
-          />
-        ) : isTeams ? (
-          <DataTable
-            columns={TEAM_COLUMNS}
-            data={DUMMY_TEAMS}
-            onRowClick={(row) => setSelectedTeam(row as unknown as FullTeamRecord)}
-          />
-        ) : isCompetitions ? (
-          <DataTable
-            columns={COMPETITION_COLUMNS}
-            data={DUMMY_COMPETITIONS}
-            onRowClick={(row) => {
-              const c = row as unknown as CompetitionData;
-              setSelectedCompetition(
-                DUMMY_COMPETITION_DETAILS[c.identifier] ?? {
-                  competition: c,
-                  names: [],
-                  groups: [],
-                  sizes: [],
-                  teams: [],
+        {/* Detail pages are code-split (demo and database alike), so the active
+            one renders behind a boundary that shows the loading skeleton */}
+        <Suspense fallback={<DetailLoading />}>
+          {children ? (
+            children
+          ) : browserConfig && browserHasTable ? (
+            openRecord !== null &&
+            openRecord.tableName === browserConfig.tableName ? (
+              <DatabaseRecordDetail
+                config={browserConfig}
+                identifier={openRecord.identifier}
+                onBack={() => setOpenRecord(null)}
+              />
+            ) : (
+              <DatabaseBrowser
+                config={browserConfig}
+                onOpenRecord={(identifier) =>
+                  setOpenRecord({
+                    tableName: browserConfig.tableName,
+                    identifier,
+                  })
                 }
-              );
-            }}
-          />
-        ) : isFormations ? (
-          <DataTable
-            columns={FORMATION_COLUMNS}
-            data={DUMMY_FORMATIONS}
-            onRowClick={(row) => {
-              const f = row as unknown as FormationData;
-              setSelectedFormation(
-                DUMMY_FORMATION_DETAIL[f.identifier] ?? {
-                  formation: f,
-                  positions: [],
-                }
-              );
-            }}
-          />
-        ) : isBalls ? (
-          <DataTable
-            columns={BALL_COLUMNS}
-            data={DUMMY_BALLS}
-            onRowClick={(row) => setSelectedBall(row as unknown as BallData)}
-          />
-        ) : isGroups ? (
-          selectedGroup ? (
-            <GroupDetail
-              groupDetail={selectedGroup}
-              onBack={() => setSelectedGroup(null)}
-              onSave={(updated) => setSelectedGroup(updated)}
+              />
+            )
+          ) : selectedTeam ? (
+            <LazyTeamDetail
+              initialData={selectedTeam}
+              title={selectedTeam.names?.[0]?.value ?? selectedTeam.team.name_short}
+              onBack={() => setSelectedTeam(null)}
+              onChange={(updated) => setSelectedTeam(updated)}
             />
-          ) : (
+          ) : selectedPlayer ? (
+            <LazyPlayerDetail
+              player={selectedPlayer}
+              onBack={() => setSelectedPlayer(null)}
+              onSave={(updated) => setSelectedPlayer(updated)}
+            />
+          ) : selectedFormation ? (
+            <LazyFormationDetail
+              formationDetail={selectedFormation}
+              onBack={() => setSelectedFormation(null)}
+            />
+          ) : selectedBall ? (
+            <LazyBallDetail
+              ball={selectedBall}
+              onBack={() => setSelectedBall(null)}
+              onSave={(updated) => setSelectedBall(updated)}
+            />
+          ) : selectedCompetition ? (
+            <LazyCompetitionDetail
+              competitionDetail={selectedCompetition}
+              onBack={() => setSelectedCompetition(null)}
+              onSave={(updated) => setSelectedCompetition(updated)}
+            />
+          ) : isTeams ? (
             <DataTable
-              columns={GROUP_COLUMNS}
-              data={DUMMY_GROUPS}
+              columns={TEAM_COLUMNS}
+              data={DUMMY_TEAMS}
+              onRowClick={(row) => setSelectedTeam(row as unknown as FullTeamRecord)}
+            />
+          ) : isCompetitions ? (
+            <DataTable
+              columns={COMPETITION_COLUMNS}
+              data={DUMMY_COMPETITIONS}
               onRowClick={(row) => {
-                const g = row as unknown as GroupData;
-                setSelectedGroup(
-                  DUMMY_GROUP_DETAILS[g.identifier] ?? {
-                    group: g,
+                const c = row as unknown as CompetitionData;
+                setSelectedCompetition(
+                  DUMMY_COMPETITION_DETAILS[c.identifier] ?? {
+                    competition: c,
+                    names: [],
+                    groups: [],
+                    sizes: [],
                     teams: [],
                   }
                 );
               }}
             />
-          )
-        ) : (
-          <DataTable
-            columns={PLAYER_COLUMNS}
-            data={DUMMY_PLAYERS}
-            onRowClick={(row) => setSelectedPlayer(row as unknown as PlayerData)}
-          />
-        )}
+          ) : isFormations ? (
+            <DataTable
+              columns={FORMATION_COLUMNS}
+              data={DUMMY_FORMATIONS}
+              onRowClick={(row) => {
+                const f = row as unknown as FormationData;
+                setSelectedFormation(
+                  DUMMY_FORMATION_DETAIL[f.identifier] ?? {
+                    formation: f,
+                    positions: [],
+                  }
+                );
+              }}
+            />
+          ) : isBalls ? (
+            <DataTable
+              columns={BALL_COLUMNS}
+              data={DUMMY_BALLS}
+              onRowClick={(row) => setSelectedBall(row as unknown as BallData)}
+            />
+          ) : isGroups ? (
+            selectedGroup ? (
+              <LazyGroupDetail
+                groupDetail={selectedGroup}
+                onBack={() => setSelectedGroup(null)}
+                onSave={(updated) => setSelectedGroup(updated)}
+              />
+            ) : (
+              <DataTable
+                columns={GROUP_COLUMNS}
+                data={DUMMY_GROUPS}
+                onRowClick={(row) => {
+                  const g = row as unknown as GroupData;
+                  setSelectedGroup(
+                    DUMMY_GROUP_DETAILS[g.identifier] ?? {
+                      group: g,
+                      teams: [],
+                    }
+                  );
+                }}
+              />
+            )
+          ) : (
+            <DataTable
+              columns={PLAYER_COLUMNS}
+              data={DUMMY_PLAYERS}
+              onRowClick={(row) => setSelectedPlayer(row as unknown as PlayerData)}
+            />
+          )}
+        </Suspense>
       </div>
     </main>
   );

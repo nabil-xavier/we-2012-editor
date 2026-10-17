@@ -1,10 +1,8 @@
 // src/utils/table-browser.ts
 import type {
-  DatabaseRow,
   DatabaseTable,
   DatabaseValue,
 } from "@/types/database";
-import type { SchemaField, TableSchema } from "@/types/schema";
 import type {
   BrowserColumn,
   BrowserLabelSource,
@@ -158,81 +156,4 @@ export function buildLabelOwnerLookup(
     }
   }
   return lookup;
-}
-
-/** `hexagon_mean` → `Hexagon Mean`, used as fallback field label */
-export function formatColumnLabel(column: string): string {
-  return column
-    .split("_")
-    .filter((part) => part.length > 0)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-/** One labelled value of the details panel */
-export interface DetailField {
-  /** Column name */
-  key: string;
-  /** Label shown next to the value */
-  title: string;
-  /** Rendered value */
-  value: string;
-}
-
-/**
- * Display value of one column, annotated with the schema meaning:
- * `1 — Left Foot` for enums, `27 → formation` for relations.
- */
-export function formatSchemaValue(
-  value: DatabaseValue | undefined,
-  field?: SchemaField
-): string {
-  const raw = formatDatabaseValue(value);
-  if (raw.length === 0 || typeof value !== "number") {
-    return raw;
-  }
-  if (field?.type === "enum" && field.options?.[value] !== undefined) {
-    return `${raw} — ${field.options[value]}`;
-  }
-  if (field?.type === "relation" && field.target) {
-    return `${raw} → ${field.target}`;
-  }
-  return raw;
-}
-
-/**
- * Field list of the details panel: schema columns in schema order first, then
- * columns the schema does not know about yet (unknown `.bin` dumps).
- * `extraFields` (joined names, computed cells) are shown first.
- */
-export function toDetailFields(
-  row: DatabaseRow | null,
-  schema?: TableSchema,
-  extraFields: DetailField[] = []
-): DetailField[] {
-  if (!row) {
-    return extraFields;
-  }
-
-  const fields: DetailField[] = [...extraFields];
-  const seen = new Set(extraFields.map((field) => field.key));
-
-  const push = (key: string, descriptor?: SchemaField) => {
-    if (seen.has(key)) {
-      return;
-    }
-    seen.add(key);
-    fields.push({
-      key,
-      title: formatColumnLabel(key),
-      value: formatSchemaValue(row[key], descriptor),
-    });
-  };
-
-  if (schema) {
-    Object.keys(schema).forEach((key) => push(key, schema[key]));
-  }
-  Object.keys(row).forEach((key) => push(key));
-
-  return fields;
 }

@@ -25,6 +25,7 @@ export const BROWSER_TABLES: BrowserTableConfig[] = [
     label: "Player",
     searchPlaceholder: "Search Player",
     searchEntity: "player",
+    detailKind: "player",
     searchKeys: ["identifier", "name", "name_shorter"],
     columns: [
       ID_COLUMN,
@@ -42,6 +43,7 @@ export const BROWSER_TABLES: BrowserTableConfig[] = [
     label: "Team",
     searchPlaceholder: "Search Team",
     searchEntity: "team",
+    detailKind: "team",
     searchKeys: ["identifier", "name_short", "name"],
     columns: [
       ID_COLUMN,
@@ -57,6 +59,7 @@ export const BROWSER_TABLES: BrowserTableConfig[] = [
     label: "Competition",
     searchPlaceholder: "Search Competition",
     searchEntity: "competition",
+    detailKind: "competition",
     searchKeys: ["identifier", "name"],
     searchFromLabelTable: true,
     columns: [
@@ -83,6 +86,7 @@ export const BROWSER_TABLES: BrowserTableConfig[] = [
     label: "Group",
     searchPlaceholder: "Search Group",
     searchEntity: "group",
+    detailKind: "group",
     searchKeys: ["identifier", "name"],
     searchFromLabelTable: true,
     columns: [ID_COLUMN, NAME_COLUMN],
@@ -101,6 +105,7 @@ export const BROWSER_TABLES: BrowserTableConfig[] = [
     label: "Formation",
     searchPlaceholder: "Search Formation",
     searchEntity: "formation",
+    detailKind: "formation",
     searchKeys: ["identifier", "name"],
     columns: [
       ID_COLUMN,
@@ -114,6 +119,7 @@ export const BROWSER_TABLES: BrowserTableConfig[] = [
     label: "Ball",
     searchPlaceholder: "Search Ball",
     searchEntity: null,
+    detailKind: "ball",
     searchKeys: ["identifier", "name", "type"],
     columns: [
       ID_COLUMN,

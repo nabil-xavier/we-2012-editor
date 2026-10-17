@@ -37,8 +37,6 @@ export interface UseTableBrowserResult {
   totalCount: number;
   /** Identifier of the selected record, `null` when nothing is selected */
   selectedIdentifier: number | null;
-  /** Selected record, `null` when nothing is selected */
-  selectedRecord: BrowserRecord | null;
   /** Select one record, `null` clears the selection */
   selectRecord: (identifier: number | null) => void;
   /** Display text of one cell */
@@ -175,11 +173,6 @@ export function useTableBrowser(
     return hits;
   }, [records, recordsById, haystacks, labelOwnerLookup, term, runSearch]);
 
-  const selectedRecord =
-    selectedIdentifier === null
-      ? null
-      : recordsById.get(selectedIdentifier) ?? null;
-
   const setQuery = useCallback(
     (nextQuery: string) => setQueryStore(tableName, nextQuery),
     [setQueryStore, tableName]
@@ -205,7 +198,6 @@ export function useTableBrowser(
     hasTable,
     totalCount: records.length,
     selectedIdentifier,
-    selectedRecord,
     selectRecord,
     getCellValue,
   };

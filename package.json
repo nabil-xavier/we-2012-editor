@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test:smoke": "vite build --ssr scripts/browser-smoke.ts --outDir .smoke-out && node .smoke-out/browser-smoke.js",
     "preview": "vite preview"
   },
   "dependencies": {
