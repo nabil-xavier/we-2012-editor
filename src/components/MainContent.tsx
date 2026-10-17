@@ -1,6 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { DatabaseBrowser } from "@/components/DatabaseBrowser";
+import { getBrowserTableConfig } from "@/data/table-browsers";
+import { useDatabaseStore } from "@/store/useDatabaseStore";
 import { PlayerDetail } from "@/components/PlayerDetail";
 import { FormationDetail } from "@/components/FormationDetail";
 import { TeamDetail } from "@/components/TeamDetail";
@@ -467,6 +470,14 @@ export function MainContent({
   const isGroups = activeNavId === "groups";
   const isCompetitions = activeNavId === "competitions";
 
+  // Real data wins over the demo records: as soon as the imported database has
+  // the table behind the active nav item, the virtualized browser replaces the
+  // demo table (and the demo detail panels).
+  const browserConfig = getBrowserTableConfig(activeNavId);
+  const browserHasTable = useDatabaseStore((state) =>
+    browserConfig ? state.database[browserConfig.tableName] !== undefined : false
+  );
+
   return (
     <main
       className={cn(
@@ -475,9 +486,11 @@ export function MainContent({
       )}
     >
       {/* Main Details Body */}
-      <div className="flex-1 p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-1 min-h-0 flex-col p-4 sm:p-6 lg:p-8">
         {children ? (
           children
+        ) : browserConfig && browserHasTable ? (
+          <DatabaseBrowser config={browserConfig} />
         ) : selectedTeam ? (
           <TeamDetail
             initialData={selectedTeam}
