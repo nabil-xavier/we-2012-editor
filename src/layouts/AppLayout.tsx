@@ -21,13 +21,20 @@ export function AppLayout({
   className,
 }: AppLayoutProps) {
   const [activeItemId, setActiveItemId] = useState<string>(defaultSelectedId);
+  const [navClickNonce, setNavClickNonce] = useState<number>(0);
 
   const activeItem =
     navItems.find((item) => item.id === activeItemId) || navItems[0];
 
   const handleSelectItem = (id: string) => {
     setActiveItemId(id);
+    // Bump nonce on every sidebar click (even same item) so MainContent
+    // remounts and drops any open detail view back to the data table.
+    setNavClickNonce((prev) => prev + 1);
   };
+
+  // Remount key: resets MainContent internal selection state per nav click.
+  const mainContentKey = `${activeItemId}-${navClickNonce}`;
 
   return (
     <SidebarProvider className={cn("min-h-dvh bg-background text-foreground", className)}>
@@ -47,7 +54,7 @@ export function AppLayout({
         />
 
         {/* Details Page / Main View */}
-        <MainContent activeNavId={activeItemId}>
+        <MainContent key={mainContentKey} activeNavId={activeItemId}>
           {children ? children(activeItem) : undefined}
         </MainContent>
       </SidebarInset>

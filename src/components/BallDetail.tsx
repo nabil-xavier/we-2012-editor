@@ -112,12 +112,12 @@ export function BallDetail({
           <BlobImageInput
             label="Icon"
             value={data.icon}
-            onChange={(val) => updateField("icon", val)}
+            onValueChange={(val) => updateField("icon", val)}
           />
           <BlobImageInput
             label="Texture"
             value={data.texture}
-            onChange={(val) => updateField("texture", val)}
+            onValueChange={(val) => updateField("texture", val)}
           />
         </div>
       </section>

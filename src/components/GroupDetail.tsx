@@ -201,7 +201,7 @@ export function GroupDetail({
             <BlobImageInput
               label="Logo"
               value={detail.group.logo}
-              onChange={(val) => updateGroupField("logo", val)}
+              onValueChange={(val) => updateGroupField("logo", val)}
             />
           </div>
         </div>

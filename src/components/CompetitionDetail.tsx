@@ -22,6 +22,14 @@ import type {
   CompetitionTeamData,
 } from "@/types/competition";
 import {
+  COMPETITION_LANGUAGE_OPTIONS,
+  COMPETITION_TEAM_TYPE_OPTIONS,
+  COMPETITION_TYPE_OPTIONS,
+  DEFAULT_AVAILABLE_GROUPS,
+  DEFAULT_AVAILABLE_TEAMS,
+  DUMMY_COMPETITION_DETAIL,
+} from "@/data/competitions";
+import {
   ChevronLeft,
   Plus,
   Trash2,
@@ -51,45 +59,6 @@ export interface CompetitionDetailProps {
   /** Extra CSS classes */
   className?: string;
 }
-
-export const COMPETITION_TYPE_OPTIONS = [
-  { value: 0, label: "Cup" },
-  { value: 1, label: "League" },
-  { value: 2, label: "UEFA" },
-  { value: 4, label: "Super Challenge" },
-  { value: 5, label: "Copa Santander Libertadores" },
-] as const;
-
-export const COMPETITION_LANGUAGE_OPTIONS = [
-  { value: 0, label: "English" },
-  { value: 1, label: "Alternative Language" },
-] as const;
-
-export const COMPETITION_TEAM_TYPE_OPTIONS = [
-  { value: 0, label: "Type 0" },
-  { value: 1, label: "Type 1" },
-  { value: 2, label: "Type 2" },
-] as const;
-
-const DEFAULT_AVAILABLE_GROUPS: { identifier: number; name: string }[] = [
-  { identifier: 1, name: "Group 1 (Group A)" },
-  { identifier: 2, name: "Group 2 (Group B)" },
-  { identifier: 3, name: "Group 3 (Group C)" },
-  { identifier: 4, name: "Group 4 (Group D)" },
-];
-
-const DEFAULT_AVAILABLE_TEAMS: { identifier: number; name: string }[] = [
-  { identifier: 101, name: "101 - FC Barcelona" },
-  { identifier: 102, name: "102 - Real Madrid" },
-  { identifier: 103, name: "103 - Atletico Madrid" },
-  { identifier: 104, name: "104 - Manchester United" },
-  { identifier: 105, name: "105 - Chelsea FC" },
-  { identifier: 106, name: "106 - Arsenal FC" },
-  { identifier: 107, name: "107 - Liverpool FC" },
-  { identifier: 108, name: "108 - FC Bayern München" },
-  { identifier: 109, name: "109 - Juventus" },
-  { identifier: 110, name: "110 - AC Milan" },
-];
 
 const emptyCompetition: CompetitionData = {
   identifier: 0,
@@ -134,39 +103,6 @@ const emptyTeam = (competition: number): CompetitionTeamData => ({
   type: 0,
 });
 
-export const DUMMY_COMPETITION_DETAIL: CompetitionDetail = {
-  competition: {
-    identifier: 1,
-    type: 1,
-    banner_480: null,
-    banner_960: null,
-    cup: null,
-    logo_64: null,
-    logo_128: null,
-    logo_256: null,
-    color: 1,
-    card: 1,
-    leg: 2,
-    qualification: 4,
-    lock: 0,
-  },
-  names: [
-    { identifier: 1, competition: 1, language: 0, value: "Premier League" },
-    { identifier: 2, competition: 1, language: 1, value: "Liga Premier" },
-  ],
-  groups: [
-    { identifier: 1, competition: 1, group: 1 },
-    { identifier: 2, competition: 1, group: 2 },
-  ],
-  sizes: [
-    { identifier: 1, competition: 1, round: 1, size: 20 },
-    { identifier: 2, competition: 1, round: 2, size: 38 },
-  ],
-  teams: [
-    { identifier: 1, competition: 1, team: 101, type: 0 },
-    { identifier: 2, competition: 1, team: 102, type: 1 },
-  ],
-};
 export function CompetitionDetail({
   competitionDetail = DUMMY_COMPETITION_DETAIL,
   onSave,

@@ -13,6 +13,10 @@ import { GroupDetail } from "@/components/GroupDetail";
 import type { GroupDetail as GroupDetailType, GroupData } from "@/types/group";
 import { CompetitionDetail } from "@/components/CompetitionDetail";
 import type { CompetitionDetail as CompetitionDetailType, CompetitionData } from "@/types/competition";
+import {
+  DUMMY_COMPETITIONS,
+  DUMMY_COMPETITION_DETAILS,
+} from "@/data/competitions";
 
 // ---------------------------------------------------------------------------
 // Column definitions matching PlayerData attributes
@@ -417,193 +421,24 @@ const DUMMY_BALLS: (BallData & Record<string, unknown>)[] = [
 // Dummy group data for demonstration
 // ---------------------------------------------------------------------------
 const DUMMY_GROUPS: (GroupData & Record<string, unknown>)[] = [
-  { identifier: 1, logo: null },
-  { identifier: 2, logo: null },
-  { identifier: 3, logo: null },
-  { identifier: 4, logo: null },
+  { identifier: 1, logo: null, language: 0, value: "Group A" },
+  { identifier: 2, logo: null, language: 0, value: "Group B" },
+  { identifier: 3, logo: null, language: 0, value: "Group C" },
+  { identifier: 4, logo: null, language: 0, value: "Group D" },
 ];
 
 const DUMMY_GROUP_DETAILS: Record<number, GroupDetailType> = {
   1: {
-    group: { identifier: 1, logo: null },
-    names: [
-      { identifier: 1, group: 1, language: 0, value: "Group A" },
-      { identifier: 2, group: 1, language: 1, value: "Grupo A" },
-    ],
+    group: { identifier: 1, logo: null, language: 0, value: "Group A" },
     teams: [
       { identifier: 1, group: 1, team: 101 },
       { identifier: 2, group: 1, team: 102 },
     ],
   },
   2: {
-    group: { identifier: 2, logo: null },
-    names: [
-      { identifier: 3, group: 2, language: 0, value: "Group B" },
-      { identifier: 4, group: 2, language: 1, value: "Grupo B" },
-    ],
+    group: { identifier: 2, logo: null, language: 0, value: "Group B" },
     teams: [
       { identifier: 3, group: 2, team: 103 },
-    ],
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Dummy competition data for demonstration
-// ---------------------------------------------------------------------------
-const DUMMY_COMPETITIONS: (CompetitionData & { name: string; type_label: string; teams_count: number } & Record<string, unknown>)[] = [
-  {
-    identifier: 1,
-    type: 1,
-    name: "Premier League",
-    type_label: "League",
-    teams_count: 20,
-    banner_480: null,
-    banner_960: null,
-    cup: null,
-    logo_64: null,
-    logo_128: null,
-    logo_256: null,
-    color: 1,
-    card: 1,
-    leg: 2,
-    qualification: 4,
-    lock: 0,
-  },
-  {
-    identifier: 2,
-    type: 2,
-    name: "UEFA Champions League",
-    type_label: "UEFA",
-    teams_count: 32,
-    banner_480: null,
-    banner_960: null,
-    cup: null,
-    logo_64: null,
-    logo_128: null,
-    logo_256: null,
-    color: 2,
-    card: 2,
-    leg: 2,
-    qualification: 2,
-    lock: 1,
-  },
-  {
-    identifier: 3,
-    type: 5,
-    name: "Copa Santander Libertadores",
-    type_label: "Copa Santander Libertadores",
-    teams_count: 38,
-    banner_480: null,
-    banner_960: null,
-    cup: null,
-    logo_64: null,
-    logo_128: null,
-    logo_256: null,
-    color: 3,
-    card: 1,
-    leg: 2,
-    qualification: 3,
-    lock: 0,
-  },
-];
-
-const DUMMY_COMPETITION_DETAILS: Record<number, CompetitionDetailType> = {
-  1: {
-    competition: {
-      identifier: 1,
-      type: 1,
-      banner_480: null,
-      banner_960: null,
-      cup: null,
-      logo_64: null,
-      logo_128: null,
-      logo_256: null,
-      color: 1,
-      card: 1,
-      leg: 2,
-      qualification: 4,
-      lock: 0,
-    },
-    names: [
-      { identifier: 1, competition: 1, language: 0, value: "Premier League" },
-      { identifier: 2, competition: 1, language: 1, value: "Liga Premier" },
-    ],
-    groups: [
-      { identifier: 1, competition: 1, group: 1 },
-      { identifier: 2, competition: 1, group: 2 },
-    ],
-    sizes: [
-      { identifier: 1, competition: 1, round: 1, size: 20 },
-      { identifier: 2, competition: 1, round: 2, size: 38 },
-    ],
-    teams: [
-      { identifier: 1, competition: 1, team: 101, type: 0 },
-      { identifier: 2, competition: 1, team: 102, type: 1 },
-      { identifier: 3, competition: 1, team: 103, type: 2 },
-    ],
-  },
-  2: {
-    competition: {
-      identifier: 2,
-      type: 2,
-      banner_480: null,
-      banner_960: null,
-      cup: null,
-      logo_64: null,
-      logo_128: null,
-      logo_256: null,
-      color: 2,
-      card: 2,
-      leg: 2,
-      qualification: 2,
-      lock: 1,
-    },
-    names: [
-      { identifier: 3, competition: 2, language: 0, value: "UEFA Champions League" },
-      { identifier: 4, competition: 2, language: 1, value: "Ligue des Champions" },
-    ],
-    groups: [
-      { identifier: 3, competition: 2, group: 1 },
-      { identifier: 4, competition: 2, group: 2 },
-      { identifier: 5, competition: 2, group: 3 },
-      { identifier: 6, competition: 2, group: 4 },
-    ],
-    sizes: [
-      { identifier: 3, competition: 2, round: 1, size: 32 },
-      { identifier: 4, competition: 2, round: 2, size: 16 },
-    ],
-    teams: [
-      { identifier: 4, competition: 2, team: 101, type: 0 },
-      { identifier: 5, competition: 2, team: 102, type: 0 },
-    ],
-  },
-  3: {
-    competition: {
-      identifier: 3,
-      type: 5,
-      banner_480: null,
-      banner_960: null,
-      cup: null,
-      logo_64: null,
-      logo_128: null,
-      logo_256: null,
-      color: 3,
-      card: 1,
-      leg: 2,
-      qualification: 3,
-      lock: 0,
-    },
-    names: [
-      { identifier: 5, competition: 3, language: 0, value: "Copa Santander Libertadores" },
-    ],
-    groups: [
-      { identifier: 7, competition: 3, group: 1 },
-    ],
-    sizes: [
-      { identifier: 5, competition: 3, round: 1, size: 38 },
-    ],
-    teams: [
-      { identifier: 6, competition: 3, team: 103, type: 1 },
     ],
   },
 };
@@ -732,7 +567,6 @@ export function MainContent({
                 setSelectedGroup(
                   DUMMY_GROUP_DETAILS[g.identifier] ?? {
                     group: g,
-                    names: [],
                     teams: [],
                   }
                 );
