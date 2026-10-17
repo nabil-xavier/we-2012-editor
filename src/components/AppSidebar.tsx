@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useDatabaseImport } from "@/hooks/useDatabaseImport";
 import { useDatabaseCache } from "@/hooks/useDatabaseCache";
+import { useDirtyState } from "@/hooks/useDirtyState";
 import { DATABASE_FILE_EXTENSION } from "@/services/database";
 import type { NavItem } from "@/types/nav";
 
@@ -40,6 +41,7 @@ export function AppSidebar({
   const { setOpenMobile, isMobile } = useSidebar();
   const { handleFileChange, isLoading, error, fileName } = useDatabaseImport();
   const { clearProject, isClearing } = useDatabaseCache();
+  const { hasChanges, dirtyCount } = useDirtyState();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectItem = (id: string) => {
@@ -76,6 +78,9 @@ export function AppSidebar({
       ? "text-destructive break-words"
       : "font-mono text-muted-foreground truncate",
   );
+  const dirtyMessage = `${dirtyCount} unsaved change${
+    dirtyCount === 1 ? "" : "s"
+  }`;
 
   return (
     <Sidebar
@@ -182,6 +187,12 @@ export function AppSidebar({
             </Button>
           )}
           {statusMessage && <p className={statusClassName}>{statusMessage}</p>}
+          {hasChanges && (
+            <p className="px-1 pt-0.5 font-mono text-[10px] leading-snug text-amber-500">
+              {"● "}
+              {dirtyMessage}
+            </p>
+          )}
         </div>
       </SidebarFooter>
       <SidebarRail />

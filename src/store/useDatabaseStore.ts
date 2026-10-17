@@ -11,7 +11,15 @@ import {
   rebuildSearchIndexes,
 } from "@/services/search";
 import type { Database, DatabaseRow, DatabaseTable } from "@/types/database";
+import type { DirtyState } from "@/types/dirty";
 import type { SearchIndexes } from "@/types/search";
+import {
+  clearDirtyState,
+  createEmptyDirtyState,
+  getDirtyIdentifiers,
+  markRecordDirty,
+  unmarkRecordDirty,
+} from "@/utils/dirty";
 
 /** Extra information describing the loaded file */
 export interface DatabaseMeta {
@@ -38,20 +46,31 @@ export interface DatabaseStore {
   error: string | null;
   /** Fuse indexes, rebuilt after every database change */
   search: SearchIndexes;
+  /**
+   * Unsaved record identifiers per table. Filled by every edit, dropped by
+   * `markDirty` / `unmarkDirty` / `clearDirty` and by any fresh load.
+   */
+  dirty: DirtyState;
   /** Replace the stored database and persist it to the local cache */
   setDatabase: (database: Database, meta?: DatabaseMeta) => void;
   /** Replace the stored database without touching the cache (cache restore) */
   hydrateDatabase: (database: Database, meta?: DatabaseMeta) => void;
-  /** Insert or replace one record, then refresh index + cache */
+  /** Insert or replace one record, then refresh index + cache + dirty state */
   upsertRecord: (tableName: string, identifier: number, row: DatabaseRow) => void;
-  /** Merge a patch into one record, then refresh index + cache */
+  /** Merge a patch into one record, then refresh index + cache + dirty state */
   updateRecord: (
     tableName: string,
     identifier: number,
     patch: DatabaseRow
   ) => void;
-  /** Remove one record, then refresh index + cache */
+  /** Remove one record, then refresh index + cache + dirty state */
   deleteRecord: (tableName: string, identifier: number) => void;
+  /** Mark one record as changed without touching the data */
+  markDirty: (tableName: string, identifier: number) => void;
+  /** Drop the dirty mark of one record (e.g. edit reverted) */
+  unmarkDirty: (tableName: string, identifier: number) => void;
+  /** Drop dirty marks — the listed tables, or everything when omitted */
+  clearDirty: (tableNames?: string[]) => void;
   /** Set the parsing flag */
   setLoading: (isLoading: boolean) => void;
   /** Set or clear the import error */
@@ -68,22 +87,25 @@ const initialState = {
   isLoading: false,
   error: null as string | null,
   search: createEmptySearchIndexes(),
+  dirty: createEmptyDirtyState(),
 };
 
 /**
- * Write one table back into the database, keeping `rowCounts` and the search
- * indexes consistent with the new contents.
+ * Write one table back into the database, keeping `rowCounts`, the search
+ * indexes and the dirty state consistent with the new contents.
  */
 function writeTable(
   state: DatabaseStore,
   tableName: string,
-  table: DatabaseTable
+  table: DatabaseTable,
+  dirty: DirtyState
 ): Partial<DatabaseStore> {
   const database: Database = { ...state.database, [tableName]: table };
   return {
     database,
     rowCounts: { ...state.rowCounts, [tableName]: Object.keys(table).length },
     search: rebuildSearchIndexes(database, [tableName], state.search),
+    dirty,
   };
 }
 
@@ -109,6 +131,8 @@ function databaseState(
     isLoading: false,
     error: null,
     search: buildSearchIndexes(database),
+    // A freshly loaded database has no unsaved changes
+    dirty: createEmptyDirtyState(),
   };
 }
 
@@ -126,10 +150,15 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
   upsertRecord: (tableName, identifier, row) => {
     const state = get();
     set(
-      writeTable(state, tableName, {
-        ...state.database[tableName],
-        [identifier]: row,
-      })
+      writeTable(
+        state,
+        tableName,
+        {
+          ...state.database[tableName],
+          [identifier]: row,
+        },
+        markRecordDirty(state.dirty, tableName, identifier)
+      )
     );
     void saveCachedRecord(tableName, identifier, row);
   },
@@ -142,10 +171,15 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
     }
     const row: DatabaseRow = { ...current, ...patch };
     set(
-      writeTable(state, tableName, {
-        ...state.database[tableName],
-        [identifier]: row,
-      })
+      writeTable(
+        state,
+        tableName,
+        {
+          ...state.database[tableName],
+          [identifier]: row,
+        },
+        markRecordDirty(state.dirty, tableName, identifier)
+      )
     );
     void saveCachedRecord(tableName, identifier, row);
   },
@@ -158,9 +192,29 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
     }
     const table: DatabaseTable = { ...current };
     delete table[identifier];
-    set(writeTable(state, tableName, table));
+    // Deleted identifiers stay dirty: the exporter tells deletions apart from
+    // edits by looking the identifier up in `database`.
+    set(
+      writeTable(
+        state,
+        tableName,
+        table,
+        markRecordDirty(state.dirty, tableName, identifier)
+      )
+    );
     void deleteCachedRecord(tableName, identifier);
   },
+
+  markDirty: (tableName, identifier) =>
+    set((state) => ({ dirty: markRecordDirty(state.dirty, tableName, identifier) })),
+
+  unmarkDirty: (tableName, identifier) =>
+    set((state) => ({
+      dirty: unmarkRecordDirty(state.dirty, tableName, identifier),
+    })),
+
+  clearDirty: (tableNames) =>
+    set((state) => ({ dirty: clearDirtyState(state.dirty, tableNames) })),
 
   setLoading: (isLoading) => set({ isLoading }),
 
@@ -175,4 +229,12 @@ export function selectDatabaseTable(
   tableName: string
 ): DatabaseTable {
   return state.database[tableName] ?? {};
+}
+
+/** Read the dirty identifiers of one table out of the store state */
+export function selectDirtyIdentifiers(
+  state: DatabaseStore,
+  tableName: string
+): ReadonlySet<number> {
+  return getDirtyIdentifiers(state.dirty, tableName);
 }
