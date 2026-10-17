@@ -143,25 +143,7 @@ export function FormationDetail({
         </h4>
         {detail.positions.map((pos, idx) => (
           <div key={pos.identifier || idx} className="border border-dashed border-muted rounded p-3 mb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <ValidatedInput
-                type="integer"
-                label="Identifier"
-                value={pos.identifier}
-                placeholder="e.g. 101"
-                min={0}
-                rules={{ required: true }}
-                onValueChange={(val) => updatePositionField(idx, "identifier", val ?? 0)}
-              />
-              <ValidatedInput
-                type="integer"
-                label="Formation ID"
-                value={pos.formation}
-                placeholder="Formation ID"
-                min={0}
-                rules={{ required: true }}
-                onValueChange={(val) => updatePositionField(idx, "formation", val ?? 0)}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <ValidatedInput
                 type="integer"
                 label="Position (2‑11)"
