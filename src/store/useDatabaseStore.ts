@@ -1,6 +1,11 @@
 // src/store/useDatabaseStore.ts
 import { create } from "zustand";
 import {
+  deleteCachedRecord,
+  saveCachedRecord,
+  saveDatabaseToCache,
+} from "@/services/cache";
+import {
   buildSearchIndexes,
   createEmptySearchIndexes,
   rebuildSearchIndexes,
@@ -33,23 +38,25 @@ export interface DatabaseStore {
   error: string | null;
   /** Fuse indexes, rebuilt after every database change */
   search: SearchIndexes;
-  /** Replace the stored database */
+  /** Replace the stored database and persist it to the local cache */
   setDatabase: (database: Database, meta?: DatabaseMeta) => void;
-  /** Insert or replace one record, then refresh the affected index */
+  /** Replace the stored database without touching the cache (cache restore) */
+  hydrateDatabase: (database: Database, meta?: DatabaseMeta) => void;
+  /** Insert or replace one record, then refresh index + cache */
   upsertRecord: (tableName: string, identifier: number, row: DatabaseRow) => void;
-  /** Merge a patch into one record, then refresh the affected index */
+  /** Merge a patch into one record, then refresh index + cache */
   updateRecord: (
     tableName: string,
     identifier: number,
     patch: DatabaseRow
   ) => void;
-  /** Remove one record, then refresh the affected index */
+  /** Remove one record, then refresh index + cache */
   deleteRecord: (tableName: string, identifier: number) => void;
   /** Set the parsing flag */
   setLoading: (isLoading: boolean) => void;
   /** Set or clear the import error */
   setError: (error: string | null) => void;
-  /** Empty the store */
+  /** Empty the store (keeps the cached project on disk) */
   resetDatabase: () => void;
 }
 
@@ -89,50 +96,71 @@ function countRows(database: Database): Record<string, number> {
   return counts;
 }
 
-export const useDatabaseStore = create<DatabaseStore>((set) => ({
+/** State produced by loading a database into the store */
+function databaseState(
+  database: Database,
+  meta?: DatabaseMeta
+): Partial<DatabaseStore> {
+  return {
+    database,
+    tableNames: meta?.tableNames ?? Object.keys(database),
+    rowCounts: meta?.rowCounts ?? countRows(database),
+    fileName: meta?.fileName ?? null,
+    isLoading: false,
+    error: null,
+    search: buildSearchIndexes(database),
+  };
+}
+
+export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
   ...initialState,
 
-  setDatabase: (database, meta) =>
-    set({
-      database,
-      tableNames: meta?.tableNames ?? Object.keys(database),
-      rowCounts: meta?.rowCounts ?? countRows(database),
-      fileName: meta?.fileName ?? null,
-      isLoading: false,
-      error: null,
-      search: buildSearchIndexes(database),
-    }),
+  setDatabase: (database, meta) => {
+    set(databaseState(database, meta));
+    // Persisted in the background; cache failures never block importing
+    void saveDatabaseToCache(database, meta?.fileName ?? null);
+  },
 
-  upsertRecord: (tableName, identifier, row) =>
-    set((state) =>
+  hydrateDatabase: (database, meta) => set(databaseState(database, meta)),
+
+  upsertRecord: (tableName, identifier, row) => {
+    const state = get();
+    set(
       writeTable(state, tableName, {
         ...state.database[tableName],
         [identifier]: row,
       })
-    ),
+    );
+    void saveCachedRecord(tableName, identifier, row);
+  },
 
-  updateRecord: (tableName, identifier, patch) =>
-    set((state) => {
-      const current = state.database[tableName]?.[identifier];
-      if (!current) {
-        return {};
-      }
-      return writeTable(state, tableName, {
+  updateRecord: (tableName, identifier, patch) => {
+    const state = get();
+    const current = state.database[tableName]?.[identifier];
+    if (!current) {
+      return;
+    }
+    const row: DatabaseRow = { ...current, ...patch };
+    set(
+      writeTable(state, tableName, {
         ...state.database[tableName],
-        [identifier]: { ...current, ...patch },
-      });
-    }),
+        [identifier]: row,
+      })
+    );
+    void saveCachedRecord(tableName, identifier, row);
+  },
 
-  deleteRecord: (tableName, identifier) =>
-    set((state) => {
-      const current = state.database[tableName];
-      if (!current || !(identifier in current)) {
-        return {};
-      }
-      const table: DatabaseTable = { ...current };
-      delete table[identifier];
-      return writeTable(state, tableName, table);
-    }),
+  deleteRecord: (tableName, identifier) => {
+    const state = get();
+    const current = state.database[tableName];
+    if (!current || !(identifier in current)) {
+      return;
+    }
+    const table: DatabaseTable = { ...current };
+    delete table[identifier];
+    set(writeTable(state, tableName, table));
+    void deleteCachedRecord(tableName, identifier);
+  },
 
   setLoading: (isLoading) => set({ isLoading }),
 

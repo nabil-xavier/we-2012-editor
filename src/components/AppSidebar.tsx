@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
-import { FolderOpen, ArrowDownToLine, Loader2 } from "lucide-react";
+import { FolderOpen, ArrowDownToLine, Loader2, Trash2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useDatabaseImport } from "@/hooks/useDatabaseImport";
+import { useDatabaseCache } from "@/hooks/useDatabaseCache";
 import { DATABASE_FILE_EXTENSION } from "@/services/database";
 import type { NavItem } from "@/types/nav";
 
@@ -38,6 +39,7 @@ export function AppSidebar({
 }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile, isMobile } = useSidebar();
   const { handleFileChange, isLoading, error, fileName } = useDatabaseImport();
+  const { clearProject, isClearing } = useDatabaseCache();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectItem = (id: string) => {
@@ -51,11 +53,22 @@ export function AppSidebar({
     fileInputRef.current?.click();
   };
 
+  const handleClearCacheClick = () => {
+    const confirmed = window.confirm(
+      "Delete the cached database? Locally saved records will be lost and the .bin file must be imported again."
+    );
+    if (!confirmed) {
+      return;
+    }
+    void clearProject();
+  };
+
   // Derived UI state kept out of JSX (AGENTS.MD §5)
   const OpenDatabaseIcon = isLoading ? Loader2 : FolderOpen;
   const openDatabaseLabel = isLoading
     ? `Opening ${DATABASE_FILE_EXTENSION} File…`
     : `Open ${DATABASE_FILE_EXTENSION} File`;
+  const ClearCacheIcon = isClearing ? Loader2 : Trash2;
   const statusMessage = error ?? fileName;
   const statusClassName = cn(
     "px-1 pt-0.5 text-[10px] leading-snug",
@@ -155,6 +168,19 @@ export function AppSidebar({
             <ArrowDownToLine className="size-4" />
             <span>Download .bin File</span>
           </Button>
+          {fileName && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2 h-8 text-xs text-destructive hover:text-destructive"
+              onClick={handleClearCacheClick}
+              disabled={isLoading || isClearing}
+            >
+              <ClearCacheIcon
+                className={cn("size-4 shrink-0", isClearing && "animate-spin")}
+              />
+              <span className="truncate">Clear Cache</span>
+            </Button>
+          )}
           {statusMessage && <p className={statusClassName}>{statusMessage}</p>}
         </div>
       </SidebarFooter>

@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
 import { MainContent } from "@/components/MainContent";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { useDatabaseCache } from "@/hooks/useDatabaseCache";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/types/nav";
 import { DEFAULT_NAV_ITEMS } from "@/data/nav-items";
@@ -22,6 +23,9 @@ export function AppLayout({
 }: AppLayoutProps) {
   const [activeItemId, setActiveItemId] = useState<string>(defaultSelectedId);
   const [navClickNonce, setNavClickNonce] = useState<number>(0);
+
+  // PRD step 6/8: hydrate Zustand from the IndexedDB cache once per page load.
+  useDatabaseCache();
 
   const activeItem =
     navItems.find((item) => item.id === activeItemId) || navItems[0];
