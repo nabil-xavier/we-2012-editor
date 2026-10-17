@@ -2,7 +2,22 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ValidatedInput } from "@/components/ui/ValidatedInput";
 import { BlobImageInput } from "@/components/ui/BlobImageInput";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  TEAM_FORMATION_OPTIONS,
+  TEAM_GLOVE_OPTIONS,
+  TEAM_KIT_TYPE_OPTIONS,
+  TEAM_TYPE_OPTIONS,
+} from "@/data/teams";
+import { PLAYER_OPTIONS } from "@/data/players";
 import type {
   TeamData,
   TeamGloveData,
@@ -225,10 +240,6 @@ export function TeamDetail({
           item.value_shorter = String(val ?? "");
         } else if (field === "language") {
           item.language = Number(val ?? 0);
-        } else if (field === "identifier") {
-          item.identifier = Number(val ?? 0);
-        } else if (field === "team") {
-          item.team = Number(val ?? 0);
         }
         next[existingIndex] = item;
       } else {
@@ -477,16 +488,29 @@ export function TeamDetail({
                   helperText="Required, exactly 3 characters"
                   onValueChange={(val) => updateTeamField("name_short", val.toUpperCase())}
                 />
-                <ValidatedInput
-                  type="custom-integer"
-                  label="3. Type (0 - 4)"
-                  value={team.type ?? ""}
-                  placeholder="0 - 4"
-                  max={4}
-                  rules={{ required: true }}
-                  helperText="Team category / classification index (0 to 4)"
-                  onValueChange={(val) => updateTeamField("type", val ?? undefined)}
-                />
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-xs font-medium text-foreground select-none">
+                    3. Type (0 - 4)
+                  </label>
+                  <Select
+                    value={team.type !== undefined ? String(team.type) : undefined}
+                    onValueChange={(val) => updateTeamField("type", Number(val))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select team type..." />
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      {TEAM_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[10px] text-muted-foreground select-none">
+                    Team category / classification index (0 to 4)
+                  </span>
+                </div>
               </div>
             </section>
 
@@ -532,35 +556,83 @@ export function TeamDetail({
                 </h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <ValidatedInput
-                  type="integer"
-                  label="7. Formation"
-                  value={team.formation ?? ""}
-                  placeholder="Formation ID"
-                  min={0}
-                  rules={{ required: true }}
-                  helperText="Preset formation ID (integer)"
-                  onValueChange={(val) => updateTeamField("formation", val ?? undefined)}
-                />
-                <ValidatedInput
-                  type="integer"
-                  label="8. Glove"
-                  value={team.glove ?? ""}
-                  placeholder="Glove ID"
-                  min={0}
-                  rules={{ required: true }}
-                  helperText="Default team glove index (integer)"
-                  onValueChange={(val) => updateTeamField("glove", val ?? undefined)}
-                />
-                <ValidatedInput
-                  type="integer"
-                  label="9. Captain"
-                  value={team.captain ?? ""}
-                  placeholder="Player ID"
-                  min={0}
-                  rules={{ required: true }}
-                  helperText="Designated team captain player ID"
-                  onValueChange={(val) => updateTeamField("captain", val ?? undefined)}
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-xs font-medium text-foreground select-none">
+                    4. Formation
+                  </label>
+                  <Select
+                    value={
+                      team.formation !== undefined
+                        ? String(team.formation)
+                        : undefined
+                    }
+                    onValueChange={(val) =>
+                      updateTeamField("formation", Number(val))
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select formation..." />
+                    </SelectTrigger>
+                    <SelectContent
+                      align="start"
+                      alignItemWithTrigger={false}
+                      className="w-[--anchor-width]"
+                    >
+                      {TEAM_FORMATION_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[10px] text-muted-foreground select-none">
+                    Preset formation ID
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5 w-full">
+                  <label className="text-xs font-medium text-foreground select-none">
+                    5. Glove
+                  </label>
+                  <Select
+                    value={
+                      team.glove !== undefined ? String(team.glove) : undefined
+                    }
+                    onValueChange={(val) => updateTeamField("glove", Number(val))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select glove..." />
+                    </SelectTrigger>
+                    <SelectContent
+                      align="start"
+                      alignItemWithTrigger={false}
+                      className="w-[--anchor-width]"
+                    >
+                      {TEAM_GLOVE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[10px] text-muted-foreground select-none">
+                    Default team glove index
+                  </span>
+                </div>
+                <SearchableSelect
+                  label="6. Captain"
+                  value={
+                    team.captain !== undefined ? String(team.captain) : undefined
+                  }
+                  placeholder="Select captain..."
+                  searchPlaceholder="Search player..."
+                  options={PLAYER_OPTIONS}
+                  helperText="Designated team captain player"
+                  onValueChange={(val) =>
+                    updateTeamField(
+                      "captain",
+                      val === "" ? undefined : Number(val)
+                    )
+                  }
                 />
               </div>
             </section>
@@ -576,7 +648,7 @@ export function TeamDetail({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <ValidatedInput
                   type="integer"
-                  label="10. Kick Corner Left"
+                  label="7. Kick Corner Left"
                   value={team.kick_corner_left ?? ""}
                   placeholder="Player ID"
                   min={0}
@@ -587,7 +659,7 @@ export function TeamDetail({
                 />
                 <ValidatedInput
                   type="integer"
-                  label="11. Kick Corner Right"
+                  label="8. Kick Corner Right"
                   value={team.kick_corner_right ?? ""}
                   placeholder="Player ID"
                   min={0}
@@ -598,7 +670,7 @@ export function TeamDetail({
                 />
                 <ValidatedInput
                   type="integer"
-                  label="12. Kick Free Long"
+                  label="9. Kick Free Long"
                   value={team.kick_free_long ?? ""}
                   placeholder="Player ID"
                   min={0}
@@ -609,7 +681,7 @@ export function TeamDetail({
                 />
                 <ValidatedInput
                   type="integer"
-                  label="13. Kick Free Short"
+                  label="10. Kick Free Short"
                   value={team.kick_free_short ?? ""}
                   placeholder="Player ID"
                   min={0}
@@ -620,7 +692,7 @@ export function TeamDetail({
                 />
                 <ValidatedInput
                   type="integer"
-                  label="14. Kick Penalty"
+                  label="11. Kick Penalty"
                   value={team.kick_penalty ?? ""}
                   placeholder="Player ID"
                   min={0}
@@ -652,7 +724,7 @@ export function TeamDetail({
                 <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <ValidatedInput
                     type="custom-integer"
-                    label="15. Hexagon Attack (0-255)"
+                    label="12. Hexagon Attack (0-255)"
                     value={team.hexagon_attack ?? ""}
                     placeholder="0 - 255"
                     max={255}
@@ -663,7 +735,7 @@ export function TeamDetail({
                   />
                   <ValidatedInput
                     type="custom-integer"
-                    label="16. Hexagon Defense (0-255)"
+                    label="13. Hexagon Defense (0-255)"
                     value={team.hexagon_defense ?? ""}
                     placeholder="0 - 255"
                     max={255}
@@ -674,7 +746,7 @@ export function TeamDetail({
                   />
                   <ValidatedInput
                     type="custom-integer"
-                    label="17. Hexagon Shot Power (0-255)"
+                    label="14. Hexagon Shot Power (0-255)"
                     value={team.hexagon_shot_power ?? ""}
                     placeholder="0 - 255"
                     max={255}
@@ -685,7 +757,7 @@ export function TeamDetail({
                   />
                   <ValidatedInput
                     type="custom-integer"
-                    label="18. Hexagon Speed (0-255)"
+                    label="15. Hexagon Speed (0-255)"
                     value={team.hexagon_speed ?? ""}
                     placeholder="0 - 255"
                     max={255}
@@ -696,7 +768,7 @@ export function TeamDetail({
                   />
                   <ValidatedInput
                     type="custom-integer"
-                    label="19. Hexagon Stamina (0-255)"
+                    label="16. Hexagon Stamina (0-255)"
                     value={team.hexagon_stamina ?? ""}
                     placeholder="0 - 255"
                     max={255}
@@ -707,7 +779,7 @@ export function TeamDetail({
                   />
                   <ValidatedInput
                     type="custom-integer"
-                    label="20. Hexagon Technique (0-255)"
+                    label="17. Hexagon Technique (0-255)"
                     value={team.hexagon_technique ?? ""}
                     placeholder="0 - 255"
                     max={255}
@@ -721,7 +793,7 @@ export function TeamDetail({
                   <div className="sm:col-span-2 lg:col-span-3 pt-2">
                     <ValidatedInput
                       type="custom-integer"
-                      label="21. Hexagon Mean (Read-only, Auto Calculated)"
+                      label="18. Hexagon Mean (Read-only, Auto Calculated)"
                       value={hexagonMean}
                       placeholder="Calculated automatically"
                       max={255}
@@ -846,27 +918,8 @@ export function TeamDetail({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <ValidatedInput
-                type="integer"
-                label="1. Identifier"
-                value={activeName.identifier ?? ""}
-                placeholder="Name Record ID"
-                min={0}
-                rules={{ required: true }}
-                onValueChange={(val) => updateActiveNameField("identifier", val ?? undefined)}
-              />
-              <ValidatedInput
-                type="integer"
-                label="2. Team (Foreign Key)"
-                value={team.identifier ?? ""}
-                placeholder="Team ID"
-                min={0}
-                readOnly
-                helperText="Linked to Team Identifier"
-                rules={{ required: true }}
-              />
-              <ValidatedInput
                 type="custom-integer"
-                label="3. Language (0 - 1)"
+                label="1. Language (0 - 1)"
                 value={activeName.language ?? 0}
                 placeholder="0 or 1"
                 max={1}
@@ -878,27 +931,25 @@ export function TeamDetail({
                   updateActiveNameField("language", lang);
                 }}
               />
-              <div className="sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <ValidatedInput
-                  type="string"
-                  label="4. Value"
-                  value={activeName.value ?? ""}
-                  placeholder="e.g. FC Barcelona"
-                  rules={{ required: true }}
-                  helperText="Full team name text in selected language"
-                  onValueChange={(val) => updateActiveNameField("value", val)}
-                />
+              <ValidatedInput
+                type="string"
+                label="2. Value"
+                value={activeName.value ?? ""}
+                placeholder="e.g. FC Barcelona"
+                rules={{ required: true }}
+                helperText="Full team name text in selected language"
+                onValueChange={(val) => updateActiveNameField("value", val)}
+              />
 
-                {/* 5. value_shorter: read-only, same value as value */}
-                <ValidatedInput
-                  type="string"
-                  label="5. Value Shorter (Read-only, Same as Value)"
-                  value={activeName.value_shorter ?? activeName.value ?? ""}
-                  placeholder="Mirrored from Value"
-                  readOnly
-                  helperText="Read-only: mirrors the exact value of team name"
-                />
-              </div>
+              {/* 3. value_shorter: read-only, same value as value */}
+              <ValidatedInput
+                type="string"
+                label="3. Value Shorter (Read-only, Same as Value)"
+                value={activeName.value_shorter ?? activeName.value ?? ""}
+                placeholder="Mirrored from Value"
+                readOnly
+                helperText="Read-only: mirrors the exact value of team name"
+              />
             </div>
           </section>
         )}
@@ -946,40 +997,40 @@ export function TeamDetail({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div className="flex flex-col gap-1.5 w-full">
+                <label className="text-xs font-medium text-foreground select-none">
+                  1. Type (0 - 1)
+                </label>
+                <Select
+                  value={String(activeStyle.type ?? activeKitType)}
+                  onValueChange={(val) => {
+                    const kit = Number(val) === 1 ? 1 : 0;
+                    setActiveKitType(kit);
+                    updateActiveStyleField("type", kit);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select kit type..." />
+                  </SelectTrigger>
+                  <SelectContent
+                    align="start"
+                    alignItemWithTrigger={false}
+                    className="w-[--anchor-width]"
+                  >
+                    {TEAM_KIT_TYPE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[10px] text-muted-foreground select-none">
+                  0 = Home Kit, 1 = Away Kit
+                </span>
+              </div>
               <ValidatedInput
                 type="integer"
-                label="1. Identifier"
-                value={activeStyle.identifier ?? ""}
-                placeholder="Style record ID"
-                min={0}
-                rules={{ required: true }}
-                onValueChange={(val) => updateActiveStyleField("identifier", val ?? undefined)}
-              />
-              <ValidatedInput
-                type="integer"
-                label="2. Team"
-                value={team.identifier ?? ""}
-                placeholder="Team ID"
-                readOnly
-                helperText="Linked to Team Identifier"
-              />
-              <ValidatedInput
-                type="custom-integer"
-                label="3. Type (0 - 1)"
-                value={activeStyle.type ?? activeKitType}
-                placeholder="0 or 1"
-                max={1}
-                rules={{ required: true }}
-                helperText="0 = Home Kit, 1 = Away Kit"
-                onValueChange={(val) => {
-                  const kit = val === 1 ? 1 : 0;
-                  setActiveKitType(kit);
-                  updateActiveStyleField("type", kit);
-                }}
-              />
-              <ValidatedInput
-                type="integer"
-                label="4. Map"
+                label="2. Map"
                 value={activeStyle.map ?? ""}
                 placeholder="Texture map ID"
                 min={0}
@@ -989,7 +1040,7 @@ export function TeamDetail({
               />
               <ValidatedInput
                 type="integer"
-                label="5. Text Player"
+                label="3. Text Player"
                 value={activeStyle.text_player ?? ""}
                 placeholder="Font / text ID"
                 min={0}
@@ -999,7 +1050,7 @@ export function TeamDetail({
               />
               <ValidatedInput
                 type="integer"
-                label="6. Text Keeper"
+                label="4. Text Keeper"
                 value={activeStyle.text_keeper ?? ""}
                 placeholder="GK Font / text ID"
                 min={0}
@@ -1012,14 +1063,14 @@ export function TeamDetail({
             {/* Blob Images for Uniforms */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border/70">
               <BlobImageInput
-                label="7. Uniform Player (Blob Image)"
+                label="5. Uniform Player (Blob Image)"
                 suggestedDimensions="512 × 512"
                 value={activeStyle.uniform_player}
                 helperText={`Player kit texture for ${activeKitType === 0 ? "Home" : "Away"} kit`}
                 onValueChange={(val) => updateActiveStyleField("uniform_player", val)}
               />
               <BlobImageInput
-                label="8. Uniform Keeper (Blob Image)"
+                label="6. Uniform Keeper (Blob Image)"
                 suggestedDimensions="512 × 512"
                 value={activeStyle.uniform_keeper}
                 helperText={`Goalkeeper kit texture for ${activeKitType === 0 ? "Home" : "Away"} kit`}
@@ -1041,18 +1092,8 @@ export function TeamDetail({
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <ValidatedInput
-                type="integer"
-                label="1. Identifier"
-                value={glove.identifier ?? ""}
-                placeholder="Glove record ID"
-                min={0}
-                rules={{ required: true }}
-                helperText="Primary glove record identifier"
-                onValueChange={(val) => updateGloveField("identifier", val ?? undefined)}
-              />
               <BlobImageInput
-                label="2. Data (Blob Image)"
+                label="1. Data (Blob Image)"
                 suggestedDimensions="128 × 128"
                 value={glove.data}
                 helperText="Goalkeeper glove texture / sprite blob"
@@ -1096,43 +1137,31 @@ export function TeamDetail({
                     key={idx}
                     className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3 border border-border bg-card/60 items-end"
                   >
-                    <div className="sm:col-span-3">
-                      <ValidatedInput
-                        type="integer"
-                        label="1. Identifier"
-                        value={item.identifier ?? ""}
-                        placeholder="ID"
-                        min={0}
-                        rules={{ required: true }}
-                        onValueChange={(val) => updatePlayerRow(idx, "identifier", val ?? undefined)}
+                    <div className="sm:col-span-6">
+                      <SearchableSelect
+                        label="1. Player"
+                        value={
+                          item.player !== undefined
+                            ? String(item.player)
+                            : undefined
+                        }
+                        placeholder="Select player..."
+                        searchPlaceholder="Search player..."
+                        options={PLAYER_OPTIONS}
+                        onValueChange={(val) =>
+                          updatePlayerRow(
+                            idx,
+                            "player",
+                            val === "" ? undefined : Number(val)
+                          )
+                        }
                       />
                     </div>
-                    <div className="sm:col-span-3">
+                    <div className="sm:col-span-5">
+                      {/* 2. number = integer (1-99) */}
                       <ValidatedInput
                         type="integer"
-                        label="2. Team"
-                        value={team.identifier ?? item.team ?? ""}
-                        placeholder="Team ID"
-                        readOnly
-                        helperText="Linked to team"
-                      />
-                    </div>
-                    <div className="sm:col-span-3">
-                      <ValidatedInput
-                        type="integer"
-                        label="3. Player (ID)"
-                        value={item.player ?? ""}
-                        placeholder="Player ID"
-                        min={0}
-                        rules={{ required: true }}
-                        onValueChange={(val) => updatePlayerRow(idx, "player", val ?? undefined)}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      {/* 4. number = integer (1-99) */}
-                      <ValidatedInput
-                        type="integer"
-                        label="4. Number (1-99)"
+                        label="2. Number (1-99)"
                         value={item.number ?? ""}
                         placeholder="1 - 99"
                         min={1}
