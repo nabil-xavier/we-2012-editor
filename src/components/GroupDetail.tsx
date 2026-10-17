@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CLUBS } from "@/data/clubs";
+import type { SelectOption } from "@/types/select";
 
 export interface GroupDetailProps {
   /** Optional initial group detail */
@@ -36,6 +36,8 @@ export interface GroupDetailProps {
   onBack?: () => void;
   /** Optional header title */
   title?: string;
+  /** Team options offered by the team selects (from the loaded database) */
+  teamOptions?: SelectOption[];
   /** Optional CSS class for root element */
   className?: string;
 }
@@ -57,28 +59,24 @@ const emptyTeam = (group: number): GroupTeamData => ({
 });
 
 // ---------------------------------------------------------------------------
-// Dummy item for initial state
+// Empty detail: no group row loaded yet
 // ---------------------------------------------------------------------------
-const DUMMY_GROUP_DETAIL: GroupDetail = {
-  group: { identifier: 1, logo: null, language: 0, value: "Group A" },
-  teams: [
-    { identifier: 1, group: 1, team: 101 },
-    { identifier: 2, group: 1, team: 102 },
-  ],
+const EMPTY_GROUP_DETAIL: GroupDetail = {
+  group: emptyGroup,
+  teams: [],
 };
 
 export function GroupDetail({
-  groupDetail = DUMMY_GROUP_DETAIL,
+  groupDetail = EMPTY_GROUP_DETAIL,
   onSave,
   onBack,
   title,
+  teamOptions = [],
   className,
 }: GroupDetailProps) {
   const [detail, setDetail] = useState<GroupDetail>(() => ({
     group: { ...emptyGroup, ...(groupDetail.group ?? {}) },
-    teams: (
-      groupDetail.teams ?? [emptyTeam(groupDetail.group?.identifier ?? 0)]
-    ).map((t) => ({
+    teams: (groupDetail.teams ?? []).map((t) => ({
       ...emptyTeam(t.group),
       ...t,
     })),
@@ -235,11 +233,8 @@ export function GroupDetail({
           <div className="flex flex-col gap-3">
             {detail.teams.map((team, idx) => {
               const search = teamSearches[idx] ?? "";
-              const filteredClubs = CLUBS.filter((c) =>
-                c.name.toLowerCase().includes(search.toLowerCase()),
-              );
-              const selectedClub = CLUBS.find(
-                (c) => String(c.id) === String(team.team),
+              const filteredTeams = teamOptions.filter((option) =>
+                option.label.toLowerCase().includes(search.toLowerCase()),
               );
 
               return (
@@ -253,15 +248,10 @@ export function GroupDetail({
                       Team
                     </label>
                     <Select
-                      value={selectedClub ? String(selectedClub.id) : undefined}
-                      onValueChange={(val) => {
-                        const club = CLUBS.find((c) => c.id === val);
-                        updateTeamField(
-                          idx,
-                          "team",
-                          club ? Number(club.id) || 0 : 0,
-                        );
-                      }}
+                      value={team.team ? String(team.team) : undefined}
+                      onValueChange={(val) =>
+                        updateTeamField(idx, "team", Number(val) || 0)
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select team..." />
@@ -291,14 +281,14 @@ export function GroupDetail({
                           </div>
                         </div>
                         <div className="p-1">
-                          {filteredClubs.length === 0 ? (
+                          {filteredTeams.length === 0 ? (
                             <p className="text-xs text-muted-foreground text-center py-2">
                               No teams found
                             </p>
                           ) : (
-                            filteredClubs.map((club) => (
-                              <SelectItem key={club.id} value={club.id}>
-                                {club.name}
+                            filteredTeams.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
                               </SelectItem>
                             ))
                           )}

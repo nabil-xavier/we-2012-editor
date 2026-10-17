@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { CLUBS } from "@/data/clubs";
+import type { SelectOption } from "@/types/select";
 
 export interface PlayerDetailProps {
   /** Optional initial player data to edit */
@@ -40,55 +40,59 @@ export interface PlayerDetailProps {
   onSave?: (player: PlayerData) => void;
   /** Optional header title */
   title?: string;
+  /** Club options offered by the club select (from the loaded database) */
+  clubOptions?: SelectOption[];
   /** Optional CSS class name */
   className?: string;
 }
 
-const DEFAULT_PLAYER_DATA: PlayerData = {
-  identifier: 1001,
-  name: "Lionel Messi",
-  name_shorter: "L. MESSI",
-  club: "FC Barcelona",
-  age: 24,
-  height: 169,
-  price: 50000000,
-  hair_color: 1,
-  hair_model: 12,
-  skin: 1,
-  shoe: 5,
-  foot: 1, // 1 = Left Foot
-  side: 2, // Both
-  position: 10,
-  position_flag: 1,
-  attack: 97,
-  defense: 45,
-  teamwork: 88,
-  aggression: 92,
-  speed: 90,
-  acceleration: 96,
-  agility: 95,
-  balance: 86,
-  stamina: 84,
-  response: 95,
-  jump: 76,
-  technique: 96,
-  dribble_accuracy: 97,
-  dribble_speed: 92,
-  swerve: 89,
-  pass_short_accuracy: 90,
-  pass_short_speed: 85,
-  pass_long_accuracy: 86,
-  pass_long_speed: 82,
-  shot_accuracy: 94,
-  shot_power: 84,
-  shot_technique: 95,
-  freekick_accuracy: 91,
-  header: 72,
-  keeper: 50,
-  foot_weak_accuracy: 6,
-  foot_weak_frequency: 5,
-  form: 7,
-  tenacity: 85,
+/** Zeroed record: a column absent from the database shows up empty, never fake */
+const EMPTY_PLAYER: PlayerData = {
+  identifier: 0,
+  name: "",
+  name_shorter: "",
+  club: "",
+  age: 0,
+  height: 0,
+  price: 0,
+  hair_color: 0,
+  hair_model: 0,
+  skin: 0,
+  shoe: 0,
+  foot: 0, // 0 = Right Foot
+  side: 0,
+  position: 0,
+  position_flag: 0,
+  attack: 0,
+  defense: 0,
+  teamwork: 0,
+  aggression: 0,
+  speed: 0,
+  acceleration: 0,
+  agility: 0,
+  balance: 0,
+  stamina: 0,
+  response: 0,
+  jump: 0,
+  technique: 0,
+  dribble_accuracy: 0,
+  dribble_speed: 0,
+  swerve: 0,
+  pass_short_accuracy: 0,
+  pass_short_speed: 0,
+  pass_long_accuracy: 0,
+  pass_long_speed: 0,
+  shot_accuracy: 0,
+  shot_power: 0,
+  shot_technique: 0,
+  freekick_accuracy: 0,
+  header: 0,
+  keeper: 0,
+  foot_weak_accuracy: 0,
+  foot_weak_frequency: 0,
+  form: 0,
+  tenacity: 0,
+  index: 0,
 };
 
 export function PlayerDetail({
@@ -96,10 +100,11 @@ export function PlayerDetail({
   onBack,
   onSave,
   title,
+  clubOptions = [],
   className,
 }: PlayerDetailProps) {
   const [formData, setFormData] = useState<PlayerData>(() => ({
-    ...DEFAULT_PLAYER_DATA,
+    ...EMPTY_PLAYER,
     ...(player ?? {}),
   }));
 
@@ -273,11 +278,17 @@ export function PlayerDetail({
                       </div>
                     </div>
                     <div className="p-1">
-                      {CLUBS.map((club) => (
-                        <SelectItem key={club.id} value={club.name}>
-                          {club.name}
-                        </SelectItem>
-                      ))}
+                      {clubOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          No clubs in the loaded database
+                        </p>
+                      ) : (
+                        clubOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))
+                      )}
                     </div>
                   </SelectContent>
                 </Select>

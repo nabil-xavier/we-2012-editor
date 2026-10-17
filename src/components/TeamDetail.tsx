@@ -11,13 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import {
-  TEAM_FORMATION_OPTIONS,
-  TEAM_GLOVE_OPTIONS,
-  TEAM_KIT_TYPE_OPTIONS,
-  TEAM_TYPE_OPTIONS,
-} from "@/data/teams";
-import { PLAYER_OPTIONS } from "@/data/players";
+import { TEAM_KIT_TYPE_OPTIONS, TEAM_TYPE_OPTIONS } from "@/data/teams";
+import type { SelectOption } from "@/types/select";
 import type {
   TeamData,
   TeamGloveData,
@@ -49,80 +44,44 @@ export interface TeamDetailProps {
   onChange?: (record: FullTeamRecord) => void;
   /** Optional custom header title */
   title?: string;
+  /** Formation options offered by the formation select (from the database) */
+  formationOptions?: SelectOption[];
+  /** Glove options offered by the glove select (from the database) */
+  gloveOptions?: SelectOption[];
+  /** Player options offered by the captain / squad selects (from the database) */
+  playerOptions?: SelectOption[];
   /** Optional container class name */
   className?: string;
 }
 
-const DEFAULT_FULL_TEAM: FullTeamRecord = {
-  team: {
-    identifier: 101,
-    name_short: "FCB",
-    type: 1,
-    flag_32: null,
-    flag_64: null,
-    flag_128: null,
-    formation: 4,
-    glove: 1,
-    captain: 1001, // Messi / Xavi
-    kick_corner_left: 1001,
-    kick_corner_right: 1003,
-    kick_free_long: 1003,
-    kick_free_short: 1001,
-    kick_penalty: 1001,
-    hexagon_attack: 215,
-    hexagon_defense: 175,
-    hexagon_shot_power: 195,
-    hexagon_speed: 210,
-    hexagon_stamina: 200,
-    hexagon_technique: 245,
-  },
-  glove: {
-    identifier: 1,
-    data: null,
-  },
-  names: [
-    {
-      identifier: 1,
-      team: 101,
-      language: 0, // English
-      value: "FC Barcelona",
-      value_shorter: "FC Barcelona",
-    },
-    {
-      identifier: 2,
-      team: 101,
-      language: 1, // Alternative
-      value: "Barça",
-      value_shorter: "Barça",
-    },
-  ],
-  players: [
-    { identifier: 1, team: 101, player: 1001, number: 10 },
-    { identifier: 2, team: 101, player: 1003, number: 6 },
-    { identifier: 3, team: 101, player: 1004, number: 8 },
-  ],
-  styles: [
-    {
-      identifier: 1,
-      team: 101,
-      type: 0, // Home
-      map: 1,
-      text_player: 1,
-      text_keeper: 1,
-      uniform_player: null,
-      uniform_keeper: null,
-    },
-    {
-      identifier: 2,
-      team: 101,
-      type: 1, // Away
-      map: 2,
-      text_player: 2,
-      text_keeper: 2,
-      uniform_player: null,
-      uniform_keeper: null,
-    },
-  ],
+/** Zeroed team row: a column absent from the database stays empty, never fake */
+const EMPTY_TEAM: TeamData = {
+  identifier: 0,
+  name_short: "",
+  type: 0,
+  flag_32: null,
+  flag_64: null,
+  flag_128: null,
+  formation: 0,
+  glove: 0,
+  captain: 0,
+  kick_corner_left: 0,
+  kick_corner_right: 0,
+  kick_free_long: 0,
+  kick_free_short: 0,
+  kick_penalty: 0,
+  hexagon_attack: 0,
+  hexagon_defense: 0,
+  hexagon_shot_power: 0,
+  hexagon_speed: 0,
+  hexagon_stamina: 0,
+  hexagon_technique: 0,
+};
+
+/** Zeroed glove row of a team that has no glove record yet */
+const EMPTY_TEAM_GLOVE: TeamGloveData = {
+  identifier: 0,
+  data: null,
 };
 
 export function TeamDetail({
@@ -130,28 +89,31 @@ export function TeamDetail({
   onBack,
   onChange,
   title,
+  formationOptions = [],
+  gloveOptions = [],
+  playerOptions = [],
   className,
 }: TeamDetailProps) {
   const [team, setTeam] = useState<TeamData>(() => ({
-    ...DEFAULT_FULL_TEAM.team,
+    ...EMPTY_TEAM,
     ...(initialData?.team ?? {}),
   }));
 
   const [glove, setGlove] = useState<TeamGloveData>(() => ({
-    ...DEFAULT_FULL_TEAM.glove,
+    ...EMPTY_TEAM_GLOVE,
     ...(initialData?.glove ?? {}),
   }));
 
   const [names, setNames] = useState<TeamNameData[]>(() => {
-    return initialData?.names ?? DEFAULT_FULL_TEAM.names ?? [];
+    return initialData?.names ?? [];
   });
 
   const [players, setPlayers] = useState<TeamPlayerData[]>(() => {
-    return initialData?.players ?? DEFAULT_FULL_TEAM.players ?? [];
+    return initialData?.players ?? [];
   });
 
   const [styles, setStyles] = useState<TeamStyleData[]>(() => {
-    return initialData?.styles ?? DEFAULT_FULL_TEAM.styles ?? [];
+    return initialData?.styles ?? [];
   });
 
   const [activeTab, setActiveTab] = useState<
@@ -578,11 +540,17 @@ export function TeamDetail({
                       alignItemWithTrigger={false}
                       className="w-[--anchor-width]"
                     >
-                      {TEAM_FORMATION_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      {formationOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          No formations in the loaded database
+                        </p>
+                      ) : (
+                        formationOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <span className="text-[10px] text-muted-foreground select-none">
@@ -607,11 +575,17 @@ export function TeamDetail({
                       alignItemWithTrigger={false}
                       className="w-[--anchor-width]"
                     >
-                      {TEAM_GLOVE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      {gloveOptions.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          No gloves in the loaded database
+                        </p>
+                      ) : (
+                        gloveOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <span className="text-[10px] text-muted-foreground select-none">
@@ -625,7 +599,7 @@ export function TeamDetail({
                   }
                   placeholder="Select captain..."
                   searchPlaceholder="Search player..."
-                  options={PLAYER_OPTIONS}
+                  options={playerOptions}
                   helperText="Designated team captain player"
                   onValueChange={(val) =>
                     updateTeamField(
@@ -1147,7 +1121,7 @@ export function TeamDetail({
                         }
                         placeholder="Select player..."
                         searchPlaceholder="Search player..."
-                        options={PLAYER_OPTIONS}
+                        options={playerOptions}
                         onValueChange={(val) =>
                           updatePlayerRow(
                             idx,

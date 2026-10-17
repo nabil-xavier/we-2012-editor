@@ -25,9 +25,6 @@ import {
   COMPETITION_LANGUAGE_OPTIONS,
   COMPETITION_TEAM_TYPE_OPTIONS,
   COMPETITION_TYPE_OPTIONS,
-  DEFAULT_AVAILABLE_GROUPS,
-  DEFAULT_AVAILABLE_TEAMS,
-  DUMMY_COMPETITION_DETAIL,
 } from "@/data/competitions";
 import {
   ChevronLeft,
@@ -99,33 +96,46 @@ const emptySize = (competition: number): CompetitionSizeData => ({
 const emptyTeam = (competition: number): CompetitionTeamData => ({
   identifier: 0,
   competition,
-  team: 101,
+  team: 0,
   type: 0,
 });
 
+/** Empty detail: no competition row loaded yet */
+const EMPTY_COMPETITION_DETAIL: CompetitionDetail = {
+  competition: emptyCompetition,
+  names: [],
+  groups: [],
+  sizes: [],
+  teams: [],
+};
+
 export function CompetitionDetail({
-  competitionDetail = DUMMY_COMPETITION_DETAIL,
+  competitionDetail = EMPTY_COMPETITION_DETAIL,
   onSave,
   onBack,
   title,
-  availableGroups = DEFAULT_AVAILABLE_GROUPS,
-  availableTeams = DEFAULT_AVAILABLE_TEAMS,
+  availableGroups = [],
+  availableTeams = [],
   className,
 }: CompetitionDetailProps) {
   const [detail, setDetail] = useState<CompetitionDetail>(() => ({
     competition: { ...emptyCompetition, ...(competitionDetail.competition ?? {}) },
-    names: (
-      competitionDetail.names ?? [emptyName(competitionDetail.competition?.identifier ?? 0)]
-    ).map((n) => ({ ...emptyName(n.competition), ...n })),
-    groups: (
-      competitionDetail.groups ?? [emptyGroup(competitionDetail.competition?.identifier ?? 0)]
-    ).map((g) => ({ ...emptyGroup(g.competition), ...g })),
-    sizes: (
-      competitionDetail.sizes ?? [emptySize(competitionDetail.competition?.identifier ?? 0)]
-    ).map((s) => ({ ...emptySize(s.competition), ...s })),
-    teams: (
-      competitionDetail.teams ?? [emptyTeam(competitionDetail.competition?.identifier ?? 0)]
-    ).map((t) => ({ ...emptyTeam(t.competition), ...t })),
+    names: (competitionDetail.names ?? []).map((n) => ({
+      ...emptyName(n.competition),
+      ...n,
+    })),
+    groups: (competitionDetail.groups ?? []).map((g) => ({
+      ...emptyGroup(g.competition),
+      ...g,
+    })),
+    sizes: (competitionDetail.sizes ?? []).map((s) => ({
+      ...emptySize(s.competition),
+      ...s,
+    })),
+    teams: (competitionDetail.teams ?? []).map((t) => ({
+      ...emptyTeam(t.competition),
+      ...t,
+    })),
   }));
 
   const [groupSearches, setGroupSearches] = useState<Record<number, string>>({});

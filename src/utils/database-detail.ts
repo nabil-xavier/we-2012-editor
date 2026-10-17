@@ -17,6 +17,7 @@ import {
   COMPETITION_NAME_TABLES,
   FORMATION_TABLE,
   GROUP_NAME_TABLES,
+  PLAYER_TABLE,
   TEAM_TABLE,
 } from "@/services/search";
 import { toImageDataUrl } from "@/utils/database-blob";
@@ -37,6 +38,7 @@ import type {
 } from "@/types/formation";
 import type { GroupData, GroupDetail, GroupTeamData } from "@/types/group";
 import type { PlayerData } from "@/types/player";
+import type { SelectOption } from "@/types/select";
 import type { BrowserDetailKind, BrowserTableConfig } from "@/types/table-browser";
 import type {
   FullTeamRecord,
@@ -84,15 +86,21 @@ export interface CompetitionDetailLookup {
 
 /** Payload of one opened record, discriminated by the browser `detailKind` */
 export type BrowserDetailPayload =
-  | { kind: "player"; player: PlayerData }
-  | { kind: "team"; team: FullTeamRecord }
+  | { kind: "player"; player: PlayerData; clubOptions: SelectOption[] }
+  | {
+      kind: "team";
+      team: FullTeamRecord;
+      playerOptions: SelectOption[];
+      formationOptions: SelectOption[];
+      gloveOptions: SelectOption[];
+    }
   | {
       kind: "competition";
       competition: CompetitionDetail;
       availableGroups: DetailOption[];
       availableTeams: DetailOption[];
     }
-  | { kind: "group"; group: GroupDetail }
+  | { kind: "group"; group: GroupDetail; teamOptions: SelectOption[] }
   | { kind: "formation"; formation: FormationDetail }
   | { kind: "ball"; ball: BallData };
 
@@ -411,6 +419,125 @@ export function toNameOptions(
   return [...options.values()];
 }
 
+/** `${identifier} - ${name}` label, with a placeholder when the name is missing */
+function toOptionLabel(
+  identifier: number,
+  name: string,
+  placeholder: string
+): string {
+  return `${identifier} - ${name || placeholder}`;
+}
+
+/** Options ordered by identifier, the order the selects show them in */
+function sortOptions(
+  entries: { identifier: number; option: SelectOption }[]
+): SelectOption[] {
+  return entries
+    .sort((left, right) => left.identifier - right.identifier)
+    .map((entry) => entry.option);
+}
+
+/** Display name of every team: `team_name` (language 0), else the short code */
+function toTeamLabels(database: Database): Map<number, string> {
+  const labels = new Map<number, string>();
+  for (const option of toNameOptions(database, TEAM_NAME_TABLES, "team")) {
+    if (option.name) {
+      labels.set(option.identifier, option.name);
+    }
+  }
+
+  const table = database[TEAM_TABLE];
+  for (const [key, row] of Object.entries(table ?? {})) {
+    const identifier = readIdentifier(row, Number(key));
+    const short = readString(row, "name_short");
+    if (short && !labels.has(identifier)) {
+      labels.set(identifier, short);
+    }
+  }
+  return labels;
+}
+
+/** Select options of the `player` table, labelled `id - name` */
+export function toPlayerOptions(database: Database): SelectOption[] {
+  const table = database[PLAYER_TABLE];
+  return sortOptions(
+    Object.entries(table ?? {}).map(([key, row]) => {
+      const identifier = readIdentifier(row, Number(key));
+      const club = readString(row, "club");
+      return {
+        identifier,
+        option: {
+          value: String(identifier),
+          label: toOptionLabel(identifier, readString(row, "name"), "Player"),
+          description: club || undefined,
+        },
+      };
+    })
+  );
+}
+
+/**
+ * Club options of `PlayerData.club`: the team names, used as the value itself
+ * because the column stores the name and not a foreign key.
+ */
+export function toClubOptions(database: Database): SelectOption[] {
+  const names = [...new Set(toTeamLabels(database).values())].sort((left, right) =>
+    left.localeCompare(right)
+  );
+  return names.map((name) => ({ value: name, label: name }));
+}
+
+/** Select options of the `team` table, labelled `id - name` */
+export function toTeamOptions(database: Database): SelectOption[] {
+  return sortOptions(
+    [...toTeamLabels(database)].map(([identifier, name]) => ({
+      identifier,
+      option: {
+        value: String(identifier),
+        label: toOptionLabel(identifier, name, "Team"),
+      },
+    }))
+  );
+}
+
+/** Select options of the `formation` table, labelled `id - name` */
+export function toFormationOptions(database: Database): SelectOption[] {
+  const table = database[FORMATION_TABLE];
+  return sortOptions(
+    Object.entries(table ?? {}).map(([key, row]) => {
+      const identifier = readIdentifier(row, Number(key));
+      return {
+        identifier,
+        option: {
+          value: String(identifier),
+          label: toOptionLabel(
+            identifier,
+            readString(row, "name"),
+            "Formation"
+          ),
+        },
+      };
+    })
+  );
+}
+
+/** Select options of the glove table (`team_glove`) */
+export function toGloveOptions(database: Database): SelectOption[] {
+  const table = pickTable(database, TEAM_GLOVE_TABLES);
+  return sortOptions(
+    Object.entries(table ?? {}).map(([key, row]) => {
+      const identifier = readIdentifier(row, Number(key));
+      return {
+        identifier,
+        option: {
+          value: String(identifier),
+          label: toOptionLabel(identifier, readString(row, "name"), "Glove"),
+        },
+      };
+    })
+  );
+}
+
 /** Competition record: row + names, groups, sizes and teams of that competition */
 export function toCompetitionDetail(
   database: Database,
@@ -552,10 +679,22 @@ export function buildBrowserDetail(
 
   switch (kind) {
     case "player":
-      return { kind, player: toPlayerData(row, identifier) };
+      return {
+        kind,
+        player: toPlayerData(row, identifier),
+        clubOptions: toClubOptions(database),
+      };
     case "team": {
       const team = toTeamRecord(database, identifier);
-      return team ? { kind, team } : null;
+      return team
+        ? {
+            kind,
+            team,
+            playerOptions: toPlayerOptions(database),
+            formationOptions: toFormationOptions(database),
+            gloveOptions: toGloveOptions(database),
+          }
+        : null;
     }
     case "competition": {
       const lookup = toCompetitionDetail(database, identifier);
@@ -570,7 +709,7 @@ export function buildBrowserDetail(
     }
     case "group": {
       const group = toGroupDetail(database, identifier);
-      return group ? { kind, group } : null;
+      return group ? { kind, group, teamOptions: toTeamOptions(database) } : null;
     }
     case "formation": {
       const formation = toFormationDetail(database, identifier);

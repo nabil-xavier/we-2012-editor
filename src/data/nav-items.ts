@@ -2,8 +2,8 @@ import { Trophy, Users, Shield, Volleyball, ClipboardList, Globe } from "lucide-
 import type { NavItem } from "@/types/nav";
 
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
-  { id: "players", label: "Players", icon: Users, badge: "24" },
-  { id: "teams", label: "Teams & Clubs", icon: Shield, badge: "24" },
+  { id: "players", label: "Players", icon: Users },
+  { id: "teams", label: "Teams & Clubs", icon: Shield },
   { id: "competitions", label: "Competitions", icon: Trophy },
   { id: "groups", label: "Group", icon: Globe },
   { id: "formations", label: "Formations", icon: ClipboardList },

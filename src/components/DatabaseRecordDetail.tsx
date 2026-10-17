@@ -99,6 +99,7 @@ function renderDetailPage(
         <LazyPlayerDetail
           key={identifier}
           player={payload.player}
+          clubOptions={payload.clubOptions}
           title={title}
           onBack={onBack}
         />
@@ -108,6 +109,9 @@ function renderDetailPage(
         <LazyTeamDetail
           key={identifier}
           initialData={payload.team}
+          formationOptions={payload.formationOptions}
+          gloveOptions={payload.gloveOptions}
+          playerOptions={payload.playerOptions}
           title={title}
           onBack={onBack}
         />
@@ -128,6 +132,7 @@ function renderDetailPage(
         <LazyGroupDetail
           key={identifier}
           groupDetail={payload.group}
+          teamOptions={payload.teamOptions}
           title={title}
           onBack={onBack}
         />

@@ -47,7 +47,7 @@ export function FormationDetail({
   const [detail, setDetail] = useState<FormationDetail>(() => {
     return {
       formation: { ...emptyFormation, ...(formationDetail?.formation ?? {}) },
-      positions: (formationDetail?.positions ?? [emptyPosition]).map((p) => ({
+      positions: (formationDetail?.positions ?? []).map((p) => ({
         ...emptyPosition,
         ...p,
       })),
