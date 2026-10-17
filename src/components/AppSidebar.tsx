@@ -1,6 +1,7 @@
+import { useRef } from "react";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
-import { FolderOpen, ArrowDownToLine } from "lucide-react";
+import { FolderOpen, ArrowDownToLine, Loader2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +18,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useDatabaseImport } from "@/hooks/useDatabaseImport";
+import { DATABASE_FILE_EXTENSION } from "@/services/database";
 import type { NavItem } from "@/types/nav";
 
 export interface AppSidebarProps {
@@ -34,6 +37,8 @@ export function AppSidebar({
   ...props
 }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
   const { setOpenMobile, isMobile } = useSidebar();
+  const { handleFileChange, isLoading, error, fileName } = useDatabaseImport();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectItem = (id: string) => {
     onSelectItem?.(id);
@@ -41,6 +46,23 @@ export function AppSidebar({
       setOpenMobile(false);
     }
   };
+
+  const handleOpenDatabaseClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Derived UI state kept out of JSX (AGENTS.MD §5)
+  const OpenDatabaseIcon = isLoading ? Loader2 : FolderOpen;
+  const openDatabaseLabel = isLoading
+    ? `Opening ${DATABASE_FILE_EXTENSION} File…`
+    : `Open ${DATABASE_FILE_EXTENSION} File`;
+  const statusMessage = error ?? fileName;
+  const statusClassName = cn(
+    "px-1 pt-0.5 text-[10px] leading-snug",
+    error
+      ? "text-destructive break-words"
+      : "font-mono text-muted-foreground truncate",
+  );
 
   return (
     <Sidebar
@@ -108,12 +130,24 @@ export function AppSidebar({
       {/* Quick Action Footer */}
       <SidebarFooter className="p-3 border-t border-sidebar-border">
         <div className="space-y-1">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={DATABASE_FILE_EXTENSION}
+            className="hidden"
+            disabled={isLoading}
+            onChange={handleFileChange}
+          />
           <Button
             variant="outline"
             className="w-full justify-start gap-2 h-8 text-xs"
+            onClick={handleOpenDatabaseClick}
+            disabled={isLoading}
           >
-            <FolderOpen className="size-4" />
-            <span>Open .bin File</span>
+            <OpenDatabaseIcon
+              className={cn("size-4 shrink-0", isLoading && "animate-spin")}
+            />
+            <span className="truncate">{openDatabaseLabel}</span>
           </Button>
           <Button
             className="w-full justify-start gap-2 h-8 text-xs"
@@ -121,6 +155,7 @@ export function AppSidebar({
             <ArrowDownToLine className="size-4" />
             <span>Download .bin File</span>
           </Button>
+          {statusMessage && <p className={statusClassName}>{statusMessage}</p>}
         </div>
       </SidebarFooter>
       <SidebarRail />
